@@ -111,7 +111,7 @@ const createStorage = (seed = {}, options = {}) => {
   };
 };
 
-const createApp = (storage = createStorage()) => {
+const createApp = (storage = createStorage(), { initialFilter = "all" } = {}) => {
   const ids = [
     "transaction-date",
     "transaction-form",
@@ -129,6 +129,8 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
+    "filter-empty-state",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -136,6 +138,8 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
+  elements["transaction-filter"].value = initialFilter;
+  elements["transaction-filter"].disabled = true;
 
   let nextId = 1;
   const window = {
@@ -169,6 +173,14 @@ const createApp = (storage = createStorage()) => {
 
 const transactionsFrom = (storage) =>
   JSON.parse(storage.values.get("transactions")).transactions;
+
+const visibleTypes = (elements) =>
+  elements["transaction-history"].children[0].children.map(
+    (article) => article.children[0].children[0].textContent,
+  );
+
+const seedEnvelope = (list) =>
+  JSON.stringify({ schemaVersion: 1, transactions: list });
 
 test("integration: index.html exposes every required app control and local asset", () => {
   for (const id of [
