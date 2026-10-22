@@ -287,6 +287,8 @@ const transactionAmountInput = document.getElementById("transaction-amount");
 const transactionNoteInput = document.getElementById("transaction-note");
 const transactionHistory = document.getElementById("transaction-history");
 const emptyState = document.getElementById("empty-state");
+const transactionFilter = document.getElementById("transaction-filter");
+const filterEmptyState = document.getElementById("filter-empty-state");
 const balanceAmount = document.getElementById("balance-amount");
 const saveButton = document.getElementById("save-transaction");
 const formError = document.getElementById("form-error");
@@ -404,9 +406,10 @@ const createTransactionElement = (transaction) => {
 };
 
 const renderTransactions = (nextTransactions, balanceInPaise) => {
+  const visibleTransactions = filterTransactionsByType(nextTransactions, activeFilter);
   const list = document.createElement("div");
   list.className = "transaction-list";
-  nextTransactions.forEach((transaction) => {
+  visibleTransactions.forEach((transaction) => {
     list.append(createTransactionElement(transaction));
   });
 
@@ -414,6 +417,10 @@ const renderTransactions = (nextTransactions, balanceInPaise) => {
   balanceAmount.textContent = formatINR(balanceInPaise);
   balanceAmount.hidden = false;
   emptyState.hidden = nextTransactions.length !== 0;
+  filterEmptyState.textContent =
+    nextTransactions.length > 0 && visibleTransactions.length === 0
+      ? (FILTER_EMPTY_MESSAGE_BY_KEY[activeFilter] ?? "")
+      : "";
 };
 
 const renderLoadFailure = (error) => {
@@ -421,6 +428,8 @@ const renderLoadFailure = (error) => {
   saveButton.disabled = true;
   balanceAmount.hidden = true;
   emptyState.hidden = true;
+  filterEmptyState.textContent = "";
+  transactionFilter.disabled = true;
   transactionHistory.replaceChildren();
   loadError.textContent =
     error instanceof Error
@@ -444,6 +453,7 @@ const loadTransactions = () => {
     transactions = loadedTransactions;
     repositoryReady = true;
     saveButton.disabled = false;
+    transactionFilter.disabled = false;
     showElement(loadError, false);
     showElement(retryLoadButton, false);
   } catch (error) {
@@ -544,6 +554,10 @@ if (transactionForm) {
 
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
+}
+
+if (transactionFilter) {
+  transactionFilter.value = activeFilter;
 }
 
 loadTransactions();

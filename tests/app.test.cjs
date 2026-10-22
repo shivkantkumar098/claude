@@ -561,6 +561,53 @@ test("integration: storage read failure is visible and retry loads after recover
   assert.equal(elements["empty-state"].hidden, false);
 });
 
+const mixedRecords = () => [
+  { id: "t-1", type: "Money Received", amountInPaise: 5000, date: "2026-10-14" },
+  { id: "t-2", type: "Expense", amountInPaise: 1000, date: "2026-10-14" },
+  { id: "t-3", type: "Expense", amountInPaise: 250, date: "2026-10-13" },
+];
+
+test("integration: startup forces the filter to All even if the control was pre-set", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage, { initialFilter: "expenses" });
+
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.deepEqual(visibleTypes(elements), ["Money Received", "Expense", "Expense"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: successful load enables the filter and empty storage shows no filter message", () => {
+  const { elements } = createApp(createStorage());
+
+  assert.equal(elements["transaction-filter"].disabled, false);
+  assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: corrupt storage disables the filter and shows neither empty message", () => {
+  const storage = createStorage({ transactions: "{bad json" });
+  const { elements } = createApp(storage);
+
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+  assert.equal(elements["transaction-filter"].disabled, true);
+});
+
+test("integration: filter stays disabled after a read failure and is re-enabled by a successful retry", () => {
+  const options = { failReads: true };
+  const storage = createStorage({}, options);
+  const { elements } = createApp(storage);
+
+  assert.equal(elements["transaction-filter"].disabled, true);
+
+  options.failReads = false;
+  elements["retry-load"].dispatch("click");
+
+  assert.equal(elements["transaction-filter"].disabled, false);
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.equal(elements["empty-state"].hidden, false);
+});
+
 test("integration: unsafe legacy value blocks migration without altering source keys", () => {
   const expenses = JSON.stringify([
     { title: "First", amount: 12.34 },
