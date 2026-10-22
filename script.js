@@ -571,6 +571,7 @@ if (transactionFilter) {
 
     const previousFilter = activeFilter;
     clearSaveStatus();
+    setFormError("");
     try {
       activeFilter = normalizeFilterKey(transactionFilter.value);
       transactionFilter.value = activeFilter;

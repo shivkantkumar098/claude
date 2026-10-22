@@ -744,6 +744,7 @@ test("integration: a render failure keeps the previous view and filter, then rec
   selectFilter(elements, "income");
   assert.deepEqual(visibleTypes(elements), ["Money Received"]);
   assert.equal(elements["transaction-filter"].value, "income");
+  assert.equal(elements["form-error"].textContent, "");
 });
 
 test("integration: changing the filter clears a previous save message", () => {
