@@ -100,7 +100,7 @@ Do not assume a technology stack before inspecting the repository.
 
 Store workflow artifacts under:
 
-`.codemie/AgentOutput/<JIRA_ISSUE_KEY>/`
+`.claude/AgentOutput/<JIRA_ISSUE_KEY>/`
 
 Use the following artifacts where applicable:
 
@@ -114,7 +114,7 @@ Use the following artifacts where applicable:
 - `pr-summary.md`
 - `workflow-session.json`
 
-Use the Jira issue key as the directory name, for example `AG-4`.
+Use the run ID as the directory name. The run ID is the Jira key for the first run (for example `AG-4`) and `<KEY>-N` for repeat runs (for example `AG-4-1`), matching the branch suffix in section 15. Artifacts are committed and pushed with the feature branch; they must never contain secrets.
 
 Preserve existing artifacts and workflow checkpoints. Update them deliberately rather than replacing them blindly.
 
@@ -262,3 +262,29 @@ At the end of each stage, report:
 At the end of the full workflow, report the final implementation status, test evidence, outstanding limitations, and whether a pull request was actually created.
 
 Always distinguish proposed actions from completed actions.
+
+## 15. Branch Naming for Repeated Runs
+
+- The first run for a Jira issue uses branch `feature/<KEY>`.
+- If `feature/<KEY>` already exists locally or on `origin` and the user starts the ticket pipeline again, do not reuse it. Create `feature/<KEY>-1`, then `feature/<KEY>-2`, and so on, using the lowest unused number.
+- Resume an existing branch only when its `workflow-session.json` shows an unfinished run for that branch. A merged or completed run is never resumed; start the next suffix instead.
+- The artifact directory and workflow session use the same run ID (`AG-10`, `AG-10-1`, `AG-10-2`) so earlier runs are never overwritten.
+- Check existence with `git branch --list` and `git ls-remote --heads origin` before creating a branch.
+
+## 16. Secrets and Ignored Files
+
+- `.mcp.json`, `.env*`, key and credential files are listed in `.gitignore` and must never be tracked. Commit `.mcp.json.example` and `.env.example` (placeholders only) instead. Real values go in the git-ignored `.env` file (copy `.env.example` to `.env`) or in your OS environment variables.
+- Credentials are referenced as `${ENV_VAR}` placeholders; never write a literal token into any tracked file.
+- Before any push, scan the commits to be pushed for secrets. If a secret is found, stop and report; do not push.
+
+## 17. PR Readiness Preflight (run at workflow start, not at Stage 8)
+
+Surface these blockers before Stage 1 so they do not appear at pull request time:
+
+1. `origin` exists and is reachable (`git ls-remote --heads origin`); the GitHub repository exists and the account has access.
+2. `gh auth status` (or the GitHub MCP) is authenticated for that repository.
+3. `main` exists locally and on `origin`; the feature branch is based on it.
+4. No tracked secret files and no secrets in history to be pushed.
+5. New test files written during implementation or verification are committed with the branch, not left untracked.
+
+If any item fails, report the specific blocker and ask the user how to resolve it. Do not create repositories, change remotes, or rewrite history without explicit authorization.

@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "issue": {
+    "key": "AG-10",
+    "title": "Filter transactions by type",
+    "branch": "feature/AG-10-1"
+  },
+  "currentStage": "Pull Request Preparation",
+  "workflowStatus": "Complete: PR #1 merged into main (merge commit 29b7a0a)",
+  "nextAction": "Human to approve/modify pr-summary.md and decide: commit tests/ag10-verification.test.cjs; fix remote URL/access; how main is created; separately authorize push and PR creation. Nothing pushed.",
+  "context": {
+    "keptThroughPlanning": true,
+    "implementationChoice": "Per-task commits T1-T7 made on feature/AG-10-1 (user-authorized); not pushed"
+  },
+  "stages": {
+    "requirements": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/requirements.md",
+      "approval": "Approved"
+    },
+    "architecture": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/architecture.md",
+      "approval": "Approved"
+    },
+    "designReview": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/design-review.md",
+      "approval": "Approved"
+    },
+    "implementationPlanning": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/impl-plan.md",
+      "approval": "Approved"
+    },
+    "implementation": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/implementation-notes.md",
+      "approval": "Approved"
+    },
+    "codeReview": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/code-review.md",
+      "approval": "Approved"
+    },
+    "verification": {
+      "status": "Approved",
+      "artifact": ".claude/AgentOutput/AG-10/verification-report.md",
+      "approval": "Approved"
+    },
+    "pullRequest": {
+      "status": "Approved; PR merged",
+      "artifact": ".claude/AgentOutput/AG-10/pr-summary.md",
+      "approval": "Approved"
+    }
+  },
+  "agentRuns": [
+    {
+      "agent": "requirement-analyst",
+      "stage": "Requirements Analysis",
+      "result": "Draft requirements.md produced; awaiting human approval"
+    },
+    {
+      "agent": "architecture-agent",
+      "stage": "Architecture Design",
+      "result": "Draft architecture.md produced; awaiting human approval"
+    },
+    {
+      "agent": "design-review-agent",
+      "stage": "Design Review",
+      "result": "design-review.md produced: verdict Approve with conditions (0 blockers, 1 major, 7 minor, 6 notes); awaiting human approval"
+    },
+    {
+      "agent": "implementation-planner",
+      "stage": "Implementation Planning",
+      "result": "impl-plan.md produced: 8 tasks (T1-T8), covers all six design-review conditions and F-01..F-08; baseline node --test tests/ = 15/15 pass (Node v20.17.0); awaiting human approval"
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation",
+      "result": "T1-T8 completed; 7 local commits (1df4d17, 942808a, 9094d82, 127f77c, 29e178e, da31bc0, e457b57); node --test tests/ = 37/37 pass (baseline 15); real-browser and screen-reader checks not performed; awaiting human approval"
+    },
+    {
+      "agent": "code-review-agent",
+      "stage": "Code Review",
+      "result": "code-review.md produced: verdict Approve with conditions (0 blocker, 0 major, 3 minor, 5 notes); node --test tests/ = 37/37 pass (executed); real-browser and screen-reader checks not verified; awaiting human approval"
+    },
+    {
+      "agent": "verification-agent",
+      "stage": "Verification",
+      "result": "verification-report.md produced: verdict Verified with limitations; node --test tests/ 37/37 on HEAD, 42/42 with new uncommitted tests/ag10-verification.test.cjs (5 tests); headless Chrome smoke passed; F-01 restoration, keyboard, screen-reader (F-04) not run; M-2/M-3 open; awaiting human approval"
+    },
+    {
+      "agent": "pr-agent",
+      "stage": "Pull Request Preparation",
+      "result": "pr-summary.md produced (prepare only). node --test tests/ = 42/42 (37 committed + 5 in untracked tests/ag10-verification.test.cjs). origin configured but ls-remote returned Repository not found; no local main branch. No commit, push, or PR made; awaiting human approval"
+    }
+  ],
+  "outstandingQuestions": [
+    "Stage 6: user to approve or request changes to code-review.md; decide whether to fix M-1 (stale filter error), M-3, optional M-2",
+    "Stage 5: user to approve or request changes to implementation (implementation-notes.md); manual browser and screen-reader checks pending",
+    "Q-001: Filter labels exactly All/Income/Expenses (Jira) vs app wording Money Received/Expense?",
+    "Q-002: Exact empty-message text per filter; should it differ from the existing 'No transactions yet' message?",
+    "Q-003: Default filter All on load?",
+    "Q-004: Behavior when a transaction is added while a filter is active (keep filter or reset to All)?",
+    "Q-005: Balance stays based on all transactions regardless of filter?",
+    "Q-006: Should the selected filter persist across reloads?",
+    "Q-007: Any other filtering or sorting expected (assumed out of scope)?",
+    "Design review: user to approve or request changes to design-review.md and its six conditions for the implementation plan (section 6)",
+    "Architecture carries Q-001..Q-007 forward as design decisions with recommended defaults (see architecture.md section 11); D-004 (Q-004: keep filter after add, optional 'hidden by current filter' note) and D-005 (Q-002: filtered-empty wording) most need user input",
+    "Stage 8: commit tests/ag10-verification.test.cjs? Fix remote and main branch? Authorize push/PR? Accept M-2/M-3 and unrun manual checks?"
+  ],
+  "knownRisks": [
+    "Terminology mismatch: Jira Income/Expenses vs app Money Received/Expense",
+    "Existing #empty-state message ('No transactions yet') would be misleading for filtered-empty results",
+    "Test DOM stub (FakeElement and element ID lists in tests/app.test.cjs) must be extended for any new element",
+    "Repository has no commits and all files are untracked; no baseline for diffing and no CI config found",
+    "Test run command is not documented (assumed node --test; not verified)",
+    "No non-functional targets specified in Jira",
+    "Added transaction may be hidden by active filter and look like a failed save (architecture R-5)",
+    "Filter must be disabled/guarded on load failure so no empty message appears (architecture R-7)",
+    "Implicit dependency of renderTransactions on module-level activeFilter (architecture R-4)",
+    "Design review F-01 (major, unverified): browser form-state restoration may desync select value from activeFilter; plan must sync at startup",
+    "Design review F-02: stale 'hidden by the current filter' note must be cleared on filter change",
+    "Design review F-03: filter mapping must use an own-key check (prototype keys such as 'constructor')",
+    "Design review F-04: live-region announcement of #filter-empty-state not verified with assistive technology",
+    "Plan risk: no git history or backup, so rollback of working-tree edits is not possible via git",
+    "Plan risk: browser form-state restoration and screen-reader behavior are not reproducible in the test stub; manual checks deferred to verification",
+    "Stage 5: real browser, form-state restoration (F-01) and screen-reader (F-04) checks not performed; Object.hasOwn requires modern browsers",
+    "Correction: repo has baseline commit b4a13c9 (plan/session text saying no commits is outdated); 7 unpushed local commits T1-T7 exist on feature/AG-10-1",
+    "Code review M-1: filter failure message in #form-error is not cleared after a later successful filter change",
+    "Code review M-3: partial DOM rollback if renderTransactions throws midway",
+    "Code review N-1: test stub select does not coerce invalid values like a real select",
+    "Verification: F-01 interactive form-state restoration, keyboard, and screen-reader (F-04) checks not run; only headless Chrome smoke performed",
+    "Verification: M-2 and M-3 remain open known limitations",
+    "Verification: tests/ag10-verification.test.cjs is uncommitted",
+    "Stage 8: no local main branch and origin (https://github.com/shivkantkumarlkp/claude.git) returned Repository not found; PR cannot be created until resolved",
+    "Stage 8: no CI, no PR template, no CHANGELOG in repo",
+    "Stage 8: push/PR blocked, no reachable GitHub repo named claude; .mcp.json has uncommitted removal of github MCP server (not committed)",
+    "Jira API token existed in original history and local backup/stash/refs/original; must be revoked"
+  ],
+  "approvalEvidence": [
+    {
+      "stage": "Requirements Analysis",
+      "userResponse": "approve reuqirement.md",
+      "note": "Explicit user approval of requirements.md in chat. Open questions Q-001 to Q-007 were not answered separately; the draft's assumptions A-001 to A-006 stand as written."
+    },
+    {
+      "stage": "Architecture Design",
+      "userResponse": "approve",
+      "note": "Explicit user approval of architecture.md in chat, following user decisions D-004 (keep filter after add, optional 'hidden by current filter' note) and D-005 (filtered-empty wording as in architecture.md). Remaining Q-001..Q-007 defaults in architecture.md section 11 stand as written."
+    },
+    {
+      "stage": "Design Review",
+      "userResponse": "approve",
+      "note": "Explicit user approval of design-review.md (verdict: Approve with conditions) in chat. The six conditions in design-review.md section 6 carry into the implementation plan."
+    },
+    {
+      "stage": "Implementation Planning",
+      "userResponse": "approve stage 4",
+      "note": "Explicit user approval of impl-plan.md in chat. The user did not answer the rollback (baseline commit vs manual backup), per-task commit, or optional wording questions; no commit is authorized."
+    },
+    {
+      "stage": "Implementation",
+      "userResponse": "approve stage 5",
+      "note": "Explicit user approval of Stage 5 in chat after the orchestrator independently confirmed 7 local task commits (1df4d17..e457b57) and 37/37 passing tests. Not verified: real-browser layout, form-state restoration (F-01), screen-reader behavior (F-04). Nothing pushed."
+    },
+    {
+      "stage": "Code Review",
+      "userResponse": "approve stage 6",
+      "note": "Explicit user approval of code-review.md (verdict: Approve with conditions) in chat. The user did not authorize a fix for M-1..M-3, so they remain open; M-1 (stale filter-failure message / missing assertion) is a PR condition to fix or explicitly accept. Verification must include or record as not verified the manual browser and screen-reader checks (F-01, F-04)."
+    },
+    {
+      "stage": "Verification",
+      "userResponse": "approve stage 7",
+      "note": "Explicit user approval of verification-report.md (verdict: Verified with limitations) in chat. Orchestrator reran the suite: 42/42 pass including the untracked tests/ag10-verification.test.cjs. Not run: real-browser form-state restoration (F-01), keyboard, screen reader (F-04), layout. Known limitations M-2 and M-3 unfixed. User has not decided whether to commit the new test file."
+    },
+    {
+      "stage": "Pull Request Preparation",
+      "userResponse": "approve stage 8 ,yes commit ,claude is repo u can create branch and push it to it ,it is fixed ,run manual check ,yes i have authroization",
+      "note": "Explicit Stage 8 approval; authorizes committing tests/ag10-verification.test.cjs and pushing the branch. Push not performed: origin shivkantkumarlkp/claude.git and shivkantkumar098/claude both not found."
+    }
+  ],
+  "lastCompletedAction": "PR #1 merged",
+  "updatedAt": "2026-10-22T12:32:59.441Z",
+  "userDecisions": [
+    {
+      "stage": "Implementation",
+      "decisions": [
+        "Commit per task T1..T8 authorized: stage only task files, no push/force/history rewrite/hook bypass, message AG-10 T<n> with Co-Authored-By trailer, full suite green before each commit",
+        "Wording: label Filter by type; failure message The filter could not be applied. The previous view is kept.",
+        "Rollback safety: no baseline commit authorized; originals copied to %TEMP%ag10-backup before edits"
+      ],
+      "source": "User chat instruction relayed by orchestrator; not Stage 5 approval"
+    },
+    {
+      "stage": "Post-Code-Review follow-up",
+      "decisions": [
+        "User chose to fix M-1 first and authorized ONE follow-up local commit; M-2 and M-3 intentionally left unfixed",
+        "M-1 fix committed locally as bafe52e: setFormError(\"\") added in filter change handler plus test assertion; not pushed"
+      ],
+      "source": "User chat instruction relayed by orchestrator; not a stage approval"
+    },
+    {
+      "stage": "Pull Request Preparation",
+      "decisions": [
+        "Commit tests/ag10-verification.test.cjs: done as c0ff85d (42/42 pass)",
+        "Manual check run: headless Chrome layout screenshot looks correct; keyboard, screen reader (F-04), reload form restoration (F-01) NOT run (need interactive session)"
+      ],
+      "source": "User chat"
+    },
+    {
+      "stage": "Pull Request Preparation",
+      "decisions": [
+        "Created public repo shivkantkumar098/claude; history rewritten (backup/AG-10-pre-rewrite, local) to remove literal Jira token; main=cb65ac6, feature pushed; PR https://github.com/shivkantkumar098/claude/pull/1 created. Not merged."
+      ],
+      "source": "User chat (create it and push)"
+    },
+    {
+      "stage": "Pull Request Preparation",
+      "decisions": [
+        "User authorized merge (\"all are ready merge\"); PR #1 merged with a merge commit, branch not deleted"
+      ],
+      "source": "User chat"
+    }
+  ]
+}

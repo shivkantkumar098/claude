@@ -1,2 +1,24 @@
-.codemie/AgentOutput/
+# Secrets and local credentials - never commit
+.mcp.json
 **/mcp.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+*.token
+secrets/
+credentials*.json
+.claude/settings.local.json
+
+# Dependencies and local noise
+node_modules/
+*.log
+*.bak
+.DS_Store
+
+# Legacy workflow output location (artifacts now live in .claude/AgentOutput/ and are committed)
+.codemie/AgentOutput/
