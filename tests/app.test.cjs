@@ -200,6 +200,8 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
+    "filter-empty-state",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
@@ -209,6 +211,35 @@ test("integration: index.html exposes every required app control and local asset
   assert.match(htmlSource, /<link\b[^>]*href="styles\.css"/);
   assert.match(htmlSource, /<script\b[^>]*src="script\.js"/);
   assert.doesNotMatch(htmlSource, /id="(?:budget|expense-title|edit|delete)[^"]*"/i);
+});
+
+test("integration: index.html offers the All, Income and Expenses filter outside the form", () => {
+  assert.match(htmlSource, /<label\b[^>]*for="transaction-filter"[^>]*>\s*Filter by type\s*<\/label>/);
+
+  const selectMatch = /<select\b[^>]*id="transaction-filter"[^>]*>([\s\S]*?)<\/select>/.exec(
+    htmlSource,
+  );
+  assert.ok(selectMatch, "missing #transaction-filter select");
+  assert.match(selectMatch[0], /autocomplete="off"/);
+
+  const options = [...selectMatch[1].matchAll(/<option\b([^>]*)>\s*([^<]*?)\s*<\/option>/g)];
+  assert.deepEqual(
+    options.map(([, attributes, label]) => [/value="([^"]*)"/.exec(attributes)[1], label]),
+    [
+      ["all", "All"],
+      ["income", "Income"],
+      ["expenses", "Expenses"],
+    ],
+  );
+  assert.match(options[0][1], /\bselected\b/);
+  assert.doesNotMatch(options[1][1], /\bselected\b/);
+  assert.doesNotMatch(options[2][1], /\bselected\b/);
+
+  assert.ok(
+    selectMatch.index > htmlSource.indexOf("</form>"),
+    "filter select must be outside the transaction form",
+  );
+  assert.match(htmlSource, /<p\b[^>]*id="filter-empty-state"[^>]*role="status"/);
 });
 
 test("unit: amount parsing accepts positive INR cents and rejects invalid precision", () => {
