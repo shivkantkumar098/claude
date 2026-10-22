@@ -759,6 +759,68 @@ test("integration: changing the filter clears a previous save message", () => {
   assert.equal(elements["save-status"].className.includes("hide"), true);
 });
 
+const addTransaction = (elements, type, amount = "2") => {
+  elements["transaction-amount"].value = amount;
+  elements["transaction-type"].value = type;
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-form"].dispatch("submit");
+};
+
+test("integration: adding a transaction hidden by the active filter keeps the filter and notes it", () => {
+  const storage = createStorage();
+  const { elements } = createApp(storage);
+  selectFilter(elements, "income");
+
+  addTransaction(elements, "Expense", "12.34");
+
+  assert.equal(
+    elements["save-status"].textContent,
+    "Transaction added. It is hidden by the current filter.",
+  );
+  assert.equal(elements["save-status"].className.includes("hide"), false);
+  assert.equal(elements["transaction-filter"].value, "income");
+  assert.deepEqual(visibleTypes(elements), []);
+  assert.equal(elements["filter-empty-state"].textContent, "No income transactions found.");
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(elements["balance-amount"].textContent, "₹87.66");
+  assert.equal(transactionsFrom(storage).length, 1);
+  assert.equal(transactionsFrom(storage)[0].type, "Expense");
+});
+
+test("integration: adding a matching transaction under Expenses uses the plain message", () => {
+  const { elements } = createApp(createStorage());
+  selectFilter(elements, "expenses");
+
+  addTransaction(elements, "Expense");
+
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+  assert.deepEqual(visibleTypes(elements), ["Expense"]);
+});
+
+test("integration: adding a matching transaction under Income uses the plain message", () => {
+  const { elements } = createApp(createStorage());
+  selectFilter(elements, "income");
+
+  addTransaction(elements, "Money Received");
+
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+  assert.deepEqual(visibleTypes(elements), ["Money Received"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: the hidden-by-filter note is cleared when the filter changes", () => {
+  const { elements } = createApp(createStorage());
+  selectFilter(elements, "income");
+  addTransaction(elements, "Expense");
+  assert.match(elements["save-status"].textContent, /hidden by the current filter/);
+
+  selectFilter(elements, "all");
+
+  assert.equal(elements["save-status"].textContent, "");
+  assert.equal(elements["save-status"].className.includes("hide"), true);
+  assert.deepEqual(visibleTypes(elements), ["Expense"]);
+});
+
 test("integration: unsafe legacy value blocks migration without altering source keys", () => {
   const expenses = JSON.stringify([
     { title: "First", amount: 12.34 },

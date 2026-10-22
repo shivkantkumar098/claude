@@ -1,6 +1,9 @@
 const TRANSACTION_STORAGE_KEY = "transactions";
 const TRANSACTION_SCHEMA_VERSION = 1;
 const TRANSACTION_TYPES = ["Expense", "Money Received"];
+const TRANSACTION_ADDED_MESSAGE = "Transaction added.";
+const TRANSACTION_ADDED_HIDDEN_MESSAGE =
+  "Transaction added. It is hidden by the current filter.";
 const AMOUNT_PATTERN = /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/;
 
 const parseAmountToPaise = (value) => {
@@ -542,7 +545,10 @@ if (transactionForm) {
       transactionDateInput.value = getLocalDateString();
       try {
         renderTransactions(transactions, updatedBalance);
-        saveStatus.textContent = "Transaction added.";
+        saveStatus.textContent =
+          filterTransactionsByType([transaction], activeFilter).length === 0
+            ? TRANSACTION_ADDED_HIDDEN_MESSAGE
+            : TRANSACTION_ADDED_MESSAGE;
         showElement(saveStatus, true);
       } catch (error) {
         setFormError(
