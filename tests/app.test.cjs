@@ -162,6 +162,8 @@ const createApp = (storage = createStorage(), { initialFilter = "all" } = {}) =>
       formatTransactionDate,
       isValidTransactionDate,
       validateTransaction,
+      filterTransactionsByType,
+      normalizeFilterKey,
       transactionRepository
     };`,
     context,
@@ -355,6 +357,75 @@ test("unit: malformed legacy input does not partially write migrated transaction
   assert.equal(storage.values.has("transactions"), false);
   assert.equal(storage.values.get("expenses"), originalExpenses);
   assert.equal(storage.values.get("budget"), "450");
+});
+
+const filterSample = () => [
+  { id: "a", type: "Expense", amountInPaise: 100 },
+  { id: "b", type: "Money Received", amountInPaise: 200 },
+  { id: "c", type: "Expense", amountInPaise: 300 },
+  { id: "d", type: "Money Received", amountInPaise: 400 },
+];
+
+const idsOf = (list) => list.map(({ id }) => id);
+
+test("unit: filterTransactionsByType selects by type and preserves original order", () => {
+  const { context } = createApp();
+  const { filterTransactionsByType } = context.__appTest;
+  const sample = filterSample();
+
+  assert.deepEqual(idsOf(filterTransactionsByType(sample, "all")), ["a", "b", "c", "d"]);
+  assert.deepEqual(idsOf(filterTransactionsByType(sample, "income")), ["b", "d"]);
+  assert.deepEqual(idsOf(filterTransactionsByType(sample, "expenses")), ["a", "c"]);
+  assert.equal(filterTransactionsByType([], "income").length, 0);
+  assert.equal(filterTransactionsByType([], "all").length, 0);
+});
+
+test("unit: filterTransactionsByType does not mutate its input", () => {
+  const { context } = createApp();
+  const { filterTransactionsByType } = context.__appTest;
+  const sample = filterSample();
+  const before = JSON.stringify(sample);
+
+  const income = filterTransactionsByType(sample, "income");
+  filterTransactionsByType(sample, "expenses");
+
+  assert.equal(JSON.stringify(sample), before);
+  assert.equal(sample.length, 4);
+  assert.notEqual(income, sample);
+  assert.equal(income.length, 2);
+});
+
+test("unit: unknown or prototype filter keys fall back to the full list and All", () => {
+  const { context } = createApp();
+  const { filterTransactionsByType, normalizeFilterKey } = context.__appTest;
+  const sample = filterSample();
+
+  for (const key of [
+    "constructor",
+    "toString",
+    "__proto__",
+    "hasOwnProperty",
+    undefined,
+    null,
+    "",
+    "Income",
+  ]) {
+    assert.deepEqual(
+      idsOf(filterTransactionsByType(sample, key)),
+      ["a", "b", "c", "d"],
+      `expected ${String(key)} to return the full list`,
+    );
+    assert.equal(normalizeFilterKey(key), "all", `expected ${String(key)} to normalize`);
+  }
+});
+
+test("unit: normalizeFilterKey keeps the three valid keys", () => {
+  const { context } = createApp();
+  const { normalizeFilterKey } = context.__appTest;
+
+  assert.equal(normalizeFilterKey("all"), "all");
+  assert.equal(normalizeFilterKey("income"), "income");
+  assert.equal(normalizeFilterKey("expenses"), "expenses");
 });
 
 test("integration: empty app loads; saving transaction persists, renders, and updates balance", () => {

@@ -51,6 +51,24 @@ const calculateAvailableBalance = (transactions) =>
     return nextBalance;
   }, 10_000);
 
+const FILTER_TYPE_BY_KEY = Object.freeze({
+  income: "Money Received",
+  expenses: "Expense",
+});
+
+const FILTER_EMPTY_MESSAGE_BY_KEY = Object.freeze({
+  income: "No income transactions found.",
+  expenses: "No expense transactions found.",
+});
+
+const normalizeFilterKey = (value) =>
+  value === "all" || Object.hasOwn(FILTER_TYPE_BY_KEY, value) ? value : "all";
+
+const filterTransactionsByType = (transactions, filter) =>
+  Object.hasOwn(FILTER_TYPE_BY_KEY, filter)
+    ? transactions.filter(({ type }) => type === FILTER_TYPE_BY_KEY[filter])
+    : transactions;
+
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -287,6 +305,7 @@ const fieldInputs = {
 };
 
 let transactions = [];
+let activeFilter = "all";
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
