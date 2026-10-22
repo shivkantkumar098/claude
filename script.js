@@ -469,10 +469,14 @@ const setFormError = (message) => {
   showElement(formError, Boolean(message));
 };
 
-const clearSubmissionFeedback = () => {
-  setFormError("");
+const clearSaveStatus = () => {
   saveStatus.textContent = "";
   showElement(saveStatus, false);
+};
+
+const clearSubmissionFeedback = () => {
+  setFormError("");
+  clearSaveStatus();
 };
 
 if (transactionForm) {
@@ -548,6 +552,27 @@ if (transactionForm) {
     } finally {
       isSaving = false;
       saveButton.disabled = !repositoryReady;
+    }
+  });
+}
+
+if (transactionFilter) {
+  transactionFilter.addEventListener("change", () => {
+    if (!repositoryReady || isLoading) {
+      transactionFilter.value = activeFilter;
+      return;
+    }
+
+    const previousFilter = activeFilter;
+    clearSaveStatus();
+    try {
+      activeFilter = normalizeFilterKey(transactionFilter.value);
+      transactionFilter.value = activeFilter;
+      renderTransactions(transactions, calculateAvailableBalance(transactions));
+    } catch (error) {
+      activeFilter = previousFilter;
+      transactionFilter.value = previousFilter;
+      setFormError("The filter could not be applied. The previous view is kept.");
     }
   });
 }

@@ -608,6 +608,157 @@ test("integration: filter stays disabled after a read failure and is re-enabled 
   assert.equal(elements["empty-state"].hidden, false);
 });
 
+const selectFilter = (elements, key) => {
+  elements["transaction-filter"].value = key;
+  elements["transaction-filter"].dispatch("change");
+};
+
+test("integration: Income and Expenses filters show only the matching records", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage);
+
+  selectFilter(elements, "income");
+  assert.deepEqual(visibleTypes(elements), ["Money Received"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+
+  selectFilter(elements, "expenses");
+  assert.deepEqual(visibleTypes(elements), ["Expense", "Expense"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: returning to All shows every record in original order", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage);
+
+  selectFilter(elements, "income");
+  selectFilter(elements, "all");
+
+  assert.deepEqual(visibleTypes(elements), ["Money Received", "Expense", "Expense"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: a filter with no matches shows its own message, not the no-transactions message", () => {
+  const onlyExpenses = mixedRecords().filter(({ type }) => type === "Expense");
+  const { elements } = createApp(
+    createStorage({ transactions: seedEnvelope(onlyExpenses) }),
+  );
+
+  selectFilter(elements, "income");
+  assert.equal(elements["filter-empty-state"].textContent, "No income transactions found.");
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(elements["transaction-history"].children[0].children.length, 0);
+
+  selectFilter(elements, "all");
+  assert.equal(elements["filter-empty-state"].textContent, "");
+
+  const onlyIncome = mixedRecords().filter(({ type }) => type === "Money Received");
+  const second = createApp(createStorage({ transactions: seedEnvelope(onlyIncome) }));
+  selectFilter(second.elements, "expenses");
+  assert.equal(
+    second.elements["filter-empty-state"].textContent,
+    "No expense transactions found.",
+  );
+  assert.equal(second.elements["empty-state"].hidden, true);
+});
+
+test("integration: legacy migrated records appear under Expenses and not under Income", () => {
+  const storage = createStorage({
+    budget: "9999",
+    expenses: JSON.stringify([
+      { title: "Whole", amount: 12 },
+      { title: "Paise", amount: 12.34 },
+    ]),
+  });
+  const { elements } = createApp(storage);
+
+  selectFilter(elements, "expenses");
+  assert.deepEqual(visibleTypes(elements), ["Expense", "Expense"]);
+
+  selectFilter(elements, "income");
+  assert.deepEqual(visibleTypes(elements), []);
+  assert.equal(elements["filter-empty-state"].textContent, "No income transactions found.");
+});
+
+test("integration: filtering keeps the balance, writes nothing, and preserves form inputs", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage);
+  const storedBefore = storage.values.get("transactions");
+  const balanceBefore = elements["balance-amount"].textContent;
+  elements["transaction-amount"].value = "7.50";
+  elements["transaction-note"].value = "Typed note";
+
+  for (const key of ["income", "expenses", "all"]) {
+    selectFilter(elements, key);
+    assert.equal(elements["balance-amount"].textContent, balanceBefore);
+    assert.equal(elements["balance-amount"].hidden, false);
+  }
+
+  assert.equal(balanceBefore, "₹137.50");
+  assert.equal(storage.values.get("transactions"), storedBefore);
+  assert.equal(elements["transaction-amount"].value, "7.50");
+  assert.equal(elements["transaction-note"].value, "Typed note");
+});
+
+test("integration: an invalid filter value is treated as All", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage);
+
+  selectFilter(elements, "income");
+  selectFilter(elements, "constructor");
+
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.deepEqual(visibleTypes(elements), ["Money Received", "Expense", "Expense"]);
+});
+
+test("integration: filter changes are ignored while transactions are not loaded", () => {
+  const storage = createStorage({}, { failReads: true });
+  const { elements } = createApp(storage);
+
+  selectFilter(elements, "income");
+
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.equal(elements["transaction-filter"].disabled, true);
+  assert.equal(elements["transaction-history"].children.length, 0);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: a render failure keeps the previous view and filter, then recovers", () => {
+  const storage = createStorage({ transactions: seedEnvelope(mixedRecords()) });
+  const { elements } = createApp(storage);
+  const storedBefore = storage.values.get("transactions");
+  const history = elements["transaction-history"];
+  const viewBefore = history.children[0];
+
+  history.replaceChildren = () => {
+    throw new Error("render failed");
+  };
+  selectFilter(elements, "income");
+
+  assert.match(elements["form-error"].textContent, /filter could not be applied/i);
+  assert.equal(elements["form-error"].className.includes("hide"), false);
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.equal(history.children[0], viewBefore);
+  assert.equal(storage.values.get("transactions"), storedBefore);
+
+  delete history.replaceChildren;
+  selectFilter(elements, "income");
+  assert.deepEqual(visibleTypes(elements), ["Money Received"]);
+  assert.equal(elements["transaction-filter"].value, "income");
+});
+
+test("integration: changing the filter clears a previous save message", () => {
+  const { elements } = createApp(createStorage());
+  elements["transaction-amount"].value = "3";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-form"].dispatch("submit");
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+
+  selectFilter(elements, "expenses");
+
+  assert.equal(elements["save-status"].textContent, "");
+  assert.equal(elements["save-status"].className.includes("hide"), true);
+});
+
 test("integration: unsafe legacy value blocks migration without altering source keys", () => {
   const expenses = JSON.stringify([
     { title: "First", amount: 12.34 },
