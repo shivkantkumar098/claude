@@ -122,9 +122,18 @@ h2 {
   opacity: 0.6;
 }
 
-#empty-state {
+#empty-state,
+#filter-empty-state {
   margin: 0;
   color: #5c6678;
+}
+
+.history-filter {
+  margin-bottom: 1rem;
+}
+
+.history-filter select {
+  max-width: 16rem;
 }
 
 .load-error {
