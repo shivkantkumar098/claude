@@ -1,0 +1,262 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-17T04:21:41.253Z",
+    "rangeLabel": "all",
+    "agents": [
+      "claude"
+    ],
+    "projectFilter": "all",
+    "totals": {
+      "sessions": 1,
+      "durationMs": 259216,
+      "turns": 8,
+      "files": 1,
+      "netLines": 0,
+      "toolCallsTotal": 6,
+      "toolSuccessRate": 100,
+      "totalCostUSD": 0.17002140000000002,
+      "cacheReadCostUSD": 0.0846654,
+      "pricedSessions": 1
+    },
+    "unpricedModels": [],
+    "estimatedModels": [],
+    "localModels": [],
+    "coverage": [
+      {
+        "agentName": "claude",
+        "total": 1,
+        "priced": 1,
+        "withLog": 1
+      }
+    ],
+    "userEmail": "shivkant_kumar@epam.com",
+    "periodStart": "2026-10-17T04:15:46.528Z",
+    "periodEnd": "2026-10-17T04:20:05.744Z"
+  },
+  "sessions": [
+    {
+      "sessionId": "1a34a83c-ae5f-4365-9086-12ad2344089e",
+      "agentName": "claude",
+      "provider": "ai-run-sso",
+      "title": "mcp check altasaain connect or not",
+      "project": "C:\\Golu\\projects\\capstone\\claude",
+      "branch": "HEAD",
+      "startTime": 1792210546528,
+      "durationMs": 259216,
+      "turns": 8,
+      "fileOps": 1,
+      "linesAdded": 0,
+      "linesRemoved": 0,
+      "linesModified": 0,
+      "netLines": 0,
+      "filesChanged": 0,
+      "filesWritten": 0,
+      "filesEdited": 0,
+      "toolCallsTotal": 6,
+      "toolCallsSuccess": 6,
+      "toolCallsFailure": 0,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "languages": [
+        "json"
+      ],
+      "tools": [
+        {
+          "toolName": "Glob",
+          "totalCalls": 2,
+          "successCount": 2,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "ToolSearch",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "mcp__atlassian__jira_get_all_projects",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "Read",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "PowerShell",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        }
+      ],
+      "tokens": {
+        "input": 22,
+        "output": 2490,
+        "cacheRead": 423327,
+        "cacheCreation": 15103,
+        "cacheCreation1h": 15103,
+        "total": 440942
+      },
+      "costUSD": 0.17002140000000002,
+      "cacheReadCostUSD": 0.0846654,
+      "perModelCost": [
+        {
+          "model": "claude-sonnet-5-5",
+          "tokens": {
+            "input": 8,
+            "output": 684,
+            "cacheRead": 147981,
+            "cacheCreation": 13950,
+            "cacheCreation1h": 13950,
+            "total": 162623
+          },
+          "costUSD": 0.0922522,
+          "unpriced": false
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "tokens": {
+            "input": 14,
+            "output": 1806,
+            "cacheRead": 275346,
+            "cacheCreation": 1153,
+            "cacheCreation1h": 1153,
+            "total": 278319
+          },
+          "costUSD": 0.07776920000000001,
+          "unpriced": false
+        }
+      ],
+      "hadLog": true,
+      "agentSessionFile": "C:\\Users\\shivkant_kumar\\.claude\\projects\\C--Golu-projects-capstone-claude\\f46b2b63-b791-4094-a7bd-1d329541b121.jsonl",
+      "costSeries": [
+        {
+          "t": 1792210566963,
+          "cost": 0.0646588,
+          "tokens": 53953
+        },
+        {
+          "t": 1792210568281,
+          "cost": 0.0774808,
+          "tokens": 108095
+        },
+        {
+          "t": 1792210577296,
+          "cost": 0.0922522,
+          "tokens": 162623
+        },
+        {
+          "t": 1792210610194,
+          "cost": 0.10503140000000001,
+          "tokens": 217348
+        },
+        {
+          "t": 1792210612176,
+          "cost": 0.11769940000000001,
+          "tokens": 272224
+        },
+        {
+          "t": 1792210616646,
+          "cost": 0.13484420000000003,
+          "tokens": 327879
+        },
+        {
+          "t": 1792210647308,
+          "cost": 0.15396200000000002,
+          "tokens": 384168
+        },
+        {
+          "t": 1792210807945,
+          "cost": 0.17002140000000002,
+          "tokens": 440942
+        }
+      ],
+      "costSource": "native-estimate",
+      "costBasis": "standard-api-tokens",
+      "dispatchesComplete": true,
+      "rootOwnCostUSD": 0.17002140000000002,
+      "unlinkedCostUSD": 0,
+      "unlinkedAgentIds": [],
+      "rootOwnTokens": {
+        "input": 22,
+        "output": 2490,
+        "cacheRead": 423327,
+        "cacheCreation": 15103,
+        "cacheCreation1h": 15103,
+        "total": 440942
+      },
+      "unlinkedTokens": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheCreation": 0,
+        "cacheCreation1h": 0,
+        "total": 0
+      },
+      "modelTimeline": [
+        {
+          "t": 1792210566963,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0646588,
+          "tokens": 53953
+        },
+        {
+          "t": 1792210568281,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.012822,
+          "tokens": 54142
+        },
+        {
+          "t": 1792210577296,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0147714,
+          "tokens": 54528
+        },
+        {
+          "t": 1792210610194,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0127792,
+          "tokens": 54725
+        },
+        {
+          "t": 1792210612176,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.012668,
+          "tokens": 54876
+        },
+        {
+          "t": 1792210616646,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0171448,
+          "tokens": 55655
+        },
+        {
+          "t": 1792210647308,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0191178,
+          "tokens": 56289
+        },
+        {
+          "t": 1792210807945,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0160594,
+          "tokens": 56774
+        }
+      ],
+      "routedTurnsPct": 0,
+      "skillInvocations": [],
+      "agentInvocations": [],
+      "commandInvocations": [],
+      "sessionSource": "Pure chat"
+    }
+  ]
+}

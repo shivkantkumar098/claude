@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-17T04:25:08.130Z",
+    "rangeLabel": "all",
+    "agents": [
+      "claude"
+    ],
+    "projectFilter": "all",
+    "totals": {
+      "sessions": 1,
+      "durationMs": 83552,
+      "turns": 4,
+      "files": 0,
+      "netLines": 0,
+      "toolCallsTotal": 4,
+      "toolSuccessRate": 100,
+      "totalCostUSD": 0.11743500000000001,
+      "cacheReadCostUSD": 0.04069300000000001,
+      "pricedSessions": 1
+    },
+    "unpricedModels": [],
+    "estimatedModels": [],
+    "localModels": [],
+    "coverage": [
+      {
+        "agentName": "claude",
+        "total": 1,
+        "priced": 1,
+        "withLog": 1
+      }
+    ],
+    "userEmail": "shivkant_kumar@epam.com",
+    "periodStart": "2026-10-17T04:21:54.357Z",
+    "periodEnd": "2026-10-17T04:23:17.909Z"
+  },
+  "sessions": [
+    {
+      "sessionId": "6eda112b-37d7-4a11-964d-0ccc62f02532",
+      "agentName": "claude",
+      "provider": "ai-run-sso",
+      "title": "/mcp",
+      "project": "C:\\Golu\\projects\\capstone\\claude",
+      "branch": "HEAD",
+      "startTime": 1792210914357,
+      "durationMs": 83552,
+      "turns": 4,
+      "fileOps": 0,
+      "linesAdded": 0,
+      "linesRemoved": 0,
+      "linesModified": 0,
+      "netLines": 0,
+      "filesChanged": 0,
+      "filesWritten": 0,
+      "filesEdited": 0,
+      "toolCallsTotal": 4,
+      "toolCallsSuccess": 4,
+      "toolCallsFailure": 0,
+      "models": [
+        "claude-sonnet-5-5"
+      ],
+      "languages": [],
+      "tools": [
+        {
+          "toolName": "PowerShell",
+          "totalCalls": 2,
+          "successCount": 2,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "Glob",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        },
+        {
+          "toolName": "Bash",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0,
+          "successRate": 100
+        }
+      ],
+      "tokens": {
+        "input": 8,
+        "output": 1671,
+        "cacheRead": 203465,
+        "cacheCreation": 15004,
+        "cacheCreation1h": 15004,
+        "total": 220148
+      },
+      "costUSD": 0.11743500000000001,
+      "cacheReadCostUSD": 0.04069300000000001,
+      "perModelCost": [
+        {
+          "model": "claude-sonnet-5-5",
+          "tokens": {
+            "input": 4,
+            "output": 779,
+            "cacheRead": 94056,
+            "cacheCreation": 14299,
+            "cacheCreation1h": 14299,
+            "total": 109138
+          },
+          "costUSD": 0.0838052,
+          "unpriced": false
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "tokens": {
+            "input": 4,
+            "output": 892,
+            "cacheRead": 109409,
+            "cacheCreation": 705,
+            "cacheCreation1h": 705,
+            "total": 111010
+          },
+          "costUSD": 0.03362980000000001,
+          "unpriced": false
+        }
+      ],
+      "hadLog": true,
+      "agentSessionFile": "C:\\Users\\shivkant_kumar\\.claude\\projects\\C--Golu-projects-capstone-claude\\155500fe-8de5-45fe-a7c2-aa7b9256af4d.jsonl",
+      "costSeries": [
+        {
+          "t": 1792210956914,
+          "cost": 0.0668368,
+          "tokens": 54274
+        },
+        {
+          "t": 1792210977045,
+          "cost": 0.0838052,
+          "tokens": 109138
+        },
+        {
+          "t": 1792210985325,
+          "cost": 0.09899179999999999,
+          "tokens": 164313
+        },
+        {
+          "t": 1792210998772,
+          "cost": 0.11743499999999998,
+          "tokens": 220148
+        }
+      ],
+      "dispatches": [
+        {
+          "kind": "command",
+          "name": "mcp",
+          "start": 1792210927120,
+          "durationMs": 0,
+          "id": "command:af2bb9e3-f68b-42d4-a629-cd21feb80368:0",
+          "ownerAgentId": "6eda112b-37d7-4a11-964d-0ccc62f02532",
+          "relationshipStatus": "root",
+          "elapsedMs": 0,
+          "status": "completed",
+          "attributionStatus": "unavailable",
+          "attributionScope": "owner-window"
+        }
+      ],
+      "costSource": "native-estimate",
+      "costBasis": "standard-api-tokens",
+      "dispatchesComplete": true,
+      "rootOwnCostUSD": 0.11743500000000001,
+      "unlinkedCostUSD": 0,
+      "unlinkedAgentIds": [],
+      "rootOwnTokens": {
+        "input": 8,
+        "output": 1671,
+        "cacheRead": 203465,
+        "cacheCreation": 15004,
+        "cacheCreation1h": 15004,
+        "total": 220148
+      },
+      "unlinkedTokens": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheCreation": 0,
+        "cacheCreation1h": 0,
+        "total": 0
+      },
+      "modelTimeline": [
+        {
+          "t": 1792210956914,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0668368,
+          "tokens": 54274
+        },
+        {
+          "t": 1792210977045,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0169684,
+          "tokens": 54864
+        },
+        {
+          "t": 1792210985325,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0151866,
+          "tokens": 55175
+        },
+        {
+          "t": 1792210998772,
+          "model": "claude-sonnet-5-5",
+          "costUSD": 0.0184432,
+          "tokens": 55835
+        }
+      ],
+      "routedTurnsPct": 0,
+      "skillInvocations": [],
+      "agentInvocations": [],
+      "commandInvocations": [
+        {
+          "name": "mcp",
+          "totalCalls": 1,
+          "successCount": 1,
+          "failureCount": 0
+        }
+      ],
+      "sessionSource": "Pure chat"
+    }
+  ]
+}
