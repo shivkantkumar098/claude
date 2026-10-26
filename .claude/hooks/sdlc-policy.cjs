@@ -8,7 +8,7 @@ const POLICY_REMINDER = [
   "1. Follow the approved SDLC stage order defined in CLAUDE.md.",
   "2. Request explicit human approval after every stage.",
   "3. A workflow checkpoint is progress metadata, not proof of human approval.",
-  "4. Do not commit, push, merge, or create a pull request without explicit authorization.",
+  "4. Do not commit, push, or create a pull request without explicit authorization. Never merge a pull request; raise it and stop.",
   "5. Do not expose secrets or credentials.",
   "6. Protected configuration and policy files must not be modified by routine workflow agents.",
   "7. Review test evidence honestly; never fabricate test results.",
@@ -132,6 +132,11 @@ function isGitMutation(command) {
     /\bgh\s+pr\s+(create|merge|close|review)\b/i.test(text);
 }
 
+function isMergeCommand(command) {
+  return /\bgh\s+pr\s+merge\b/i.test(String(command || "")) ||
+    /\bgit\s+merge\b/i.test(String(command || ""));
+}
+
 function classifyMcp(toolName) {
 const normalized = String(toolName || "")
   .replace(/^mcp__[^_]+__/, "")
@@ -210,6 +215,14 @@ function handle(input) {
       return 0;
     }
 
+    if (isMergeCommand(command)) {
+      emit(preToolDecision(
+        "deny",
+        "Merging is blocked by the SDLC policy. Agents raise the PR; a human merges it outside this workflow."
+      ));
+      return 0;
+    }
+
     if (isGitMutation(command)) {
       emit(preToolDecision(
         "ask",
@@ -221,6 +234,14 @@ function handle(input) {
 
   // MCP tool names generally have the form mcp__server__tool.
   if (toolName.startsWith("mcp__")) {
+    if (/merge_pull_request|mergepullrequest/i.test(toolName)) {
+      emit(preToolDecision(
+        "deny",
+        "Merging is blocked by the SDLC policy. Agents raise the PR; a human merges it outside this workflow."
+      ));
+      return 0;
+    }
+
     const classification = classifyMcp(toolName);
 
     if (classification === "mutating") {

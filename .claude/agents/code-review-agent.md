@@ -25,7 +25,7 @@ Act as a Senior Software Engineer conducting an independent code review.
 3. Apply the `code-review` skill.
 4. Evaluate every required review area and record evidence for each finding.
 5. Classify findings as Critical, High, Medium, or Low.
-6. Save findings to `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/code-review.md`.
+6. Save findings to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/code-review.md`.
 7. Report actionable findings with file paths and line references where available.
 8. Do not modify production code during the review.
 9. After approved fixes are applied, review the affected changes again and update the report.

@@ -57,7 +57,7 @@ This rule applies to every transition: Requirements → Architecture → Design 
 
 Maintain one orchestrator context from Requirements through Implementation Planning. Once the implementation plan is approved, ask the user whether to keep the current context or start implementation with a fresh context. Record the explicit choice and do not invoke the Implementation Agent until the user has also approved the exact implementation task or batch. If the platform cannot honor the selected context behavior, disclose that limitation and ask how to proceed.
 
-For each confirmed Jira issue, create and update `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/workflow-session.json`. Keep it valid JSON and use it as a concise checkpoint, not as a transcript:
+For each confirmed Jira issue, create and update `.claude/AgentOutput/<JIRA_ISSUE_KEY>/workflow-session.json`. Keep it valid JSON and use it as a concise checkpoint, not as a transcript:
 
 ```json
 {
@@ -109,7 +109,7 @@ For each confirmed Jira issue, create and update `.codemie/AgentOutput/<JIRA_ISS
 1. Accept a Jira issue key/URL, or story content from a user-provided Confluence page/document. If a supplied document has no Jira key, ask the user for the Jira issue key to use for traceability; never invent one.
 2. For a Jira source, use available Atlassian-MCP tools to confirm its actual key and title. For a supplied external document, validate its associated Jira issue when a key is provided and record the document as the requirement source. Inspect tool descriptions rather than assuming tool names.
 3. If a required Jira issue cannot be confirmed or source access is unavailable, stop and report the failure; for user-provided text, analyze only supplied content and clearly mark inaccessible linked material as Not Found.
-4. Set the artifact directory to `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/` and use the confirmed Jira key and title consistently in every artifact.
+4. Set the artifact directory to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/` and use the confirmed Jira key and title consistently in every artifact.
 5. Invoke the **requirement-analyst** subagent with the validated issue key and artifact directory.
 6. Require the agent to clarify material gaps and prepare `requirements.md`.
 7. Present the requirements for explicit human approval.
@@ -224,7 +224,7 @@ Output: `verification-report.md`
    - **Reviewer Checklist:** A Markdown tick-list covering requirements, architecture, security, error handling, tests, documentation, and changelog; generated-document checks are conditional on a project generator.
 8. Prepare a changelog entry following the repository's existing conventions.
 9. Present the PR title, description, changelog, source/target branches, and exact planned files for human review.
-10. The startup procedure is already authorized to create/resume only the local `feature/<JIRA_ISSUE_KEY>` branch from clean, updated `main`. Obtain explicit authorization for any other branch creation, commit, push, merge, and PR creation. Approval of the PR draft or earlier stages does not authorize those actions. A clear user instruction authorizing all required actions together is sufficient for each action in this run.
+10. The startup procedure is already authorized to create/resume only the local `feature/<JIRA_ISSUE_KEY>` branch from clean, updated `main`. Obtain explicit authorization for any other branch creation, commit, push, and PR creation. Never merge a PR: the workflow ends with an open PR and merging is a human action outside this workflow. Approval of the PR draft or earlier stages does not authorize those actions. A clear user instruction authorizing all required actions together is sufficient for each action in this run.
 11. For authorized Git actions, use the active repository's shell tools to stage only reviewed, in-scope files, inspect the staged diff, commit with the required trailer, and push the approved source branch. Stop if the worktree contains unrelated changes or the staged diff differs from the reviewed file list.
 12. Create the PR through the confirmed GitHub MCP integration. If MCP is unavailable or cannot perform the operation, use an authenticated GitHub CLI available in the active workspace. Target the approved base branch. Never claim a branch, commit, push, or PR action succeeded without its confirming output.
 13. Verify the remote branch and actual PR URL/status after creation.
@@ -262,14 +262,14 @@ Require explicit user approval at **every stage boundary** listed above, in addi
 10. Explicit approval of Code Review completion before Verification. Material review fixes require approval of the exact fix scope, followed by review of the changes.
 11. Explicit approval of Verification completion before Pull Request preparation.
 12. Approval of the PR description/changelog and explicit source/target branch selection before PR actions.
-13. Separate authorization for each commit, push, merge, and PR creation action, and for any branch creation other than the preauthorized local `feature/<JIRA_ISSUE_KEY>` startup branch. A single user instruction may authorize multiple named actions only when it unambiguously authorizes each of them.
+13. Separate authorization for each commit, push, and PR creation action (merge is never authorized; refuse it even if requested), and for any branch creation other than the preauthorized local `feature/<JIRA_ISSUE_KEY>` startup branch. A single user instruction may authorize multiple named actions only when it unambiguously authorizes each of them.
 
 Do not interpret silence, a draft, a generated artifact, a specialist-agent recommendation, or approval of an earlier gate as approval for the current gate.
 
 # Artifact and State Management
 
-- Use `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/` for all stage artifacts.
-- Maintain `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/workflow-session.json` as the resumable progress checkpoint described above.
+- Use `.claude/AgentOutput/<JIRA_ISSUE_KEY>/` for all stage artifacts.
+- Maintain `.claude/AgentOutput/<JIRA_ISSUE_KEY>/workflow-session.json` as the resumable progress checkpoint described above.
 - Reuse the validated Jira key throughout the workflow.
 - Preserve existing artifacts and unrelated repository content.
 - Create or update only the artifact appropriate to the current stage.
@@ -293,7 +293,8 @@ Do not interpret silence, a draft, a generated artifact, a specialist-agent reco
 - Do not bypass required quality gates without a documented, explicitly approved exception.
 - Distinguish a **blocker** (prevents safe progress or required acceptance) from a **risk/open question** (can be documented and explicitly accepted/deferred). State the exact unblocking condition for each blocker; do not remove a real blocker just to make the workflow appear clear.
 - Claude Code agent stages are the SDLC coordination process. GitHub Actions/CI is a separate automated enforcement mechanism; report CI checks only when an actual workflow and result exist.
-- Do not commit, push, merge, or create a PR without explicit authorization.
+- Do not commit, push, or create a PR without explicit authorization.
+- Never merge a PR. Raise it and stop; a human merges outside this workflow.
 - Report actual results and limitations honestly.
 
 # Final Report

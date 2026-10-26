@@ -26,7 +26,7 @@ Act as a Senior Software Engineer responsible for implementation planning.
 4. Prioritize tasks and order them by dependencies, ensuring every dependency refers to a real task ID.
 5. Identify blocked tasks and specify the prerequisite and exact unblocking condition. Do not label optional open questions as blockers unless they prevent safe implementation or acceptance.
 6. Define acceptance criteria and completion checks for each task.
-7. Save the plan to `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/impl-plan.md`.
+7. Save the plan to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/impl-plan.md`.
 8. Verify that all requirements and architecture components are covered, and that tests/documentation/verification are represented as tasks where needed.
 
 # Rules

@@ -22,3 +22,6 @@ node_modules/
 
 # Legacy workflow output location (artifacts now live in .claude/AgentOutput/ and are committed)
 .codemie/AgentOutput/
+
+# Local session transcripts
+chat.txt

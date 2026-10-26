@@ -28,7 +28,7 @@ Act as a Senior Software Architect and critical design reviewer. Review the prop
 6. State whether each finding is a true blocker or a risk that can be accepted/deferred; for blockers, define the exact condition required to unblock.
 7. Present findings and proposed design decisions to the user.
 8. Wait for explicit approval of material design changes.
-9. Save findings and agreed decisions to `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/design-review.md`, even when there are no findings; distinguish unverified areas from passed review areas.
+9. Save findings and agreed decisions to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/design-review.md`, even when there are no findings; distinguish unverified areas from passed review areas.
 10. Update `architecture.md` only when changes are agreed upon.
 11. Re-review the updated architecture and verify consistency with requirements.
 12. Report findings, decisions, unresolved risks, and artifact paths.

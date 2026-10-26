@@ -31,7 +31,7 @@ Act as a Senior Business Analyst and Quality Engineer responsible for analyzing 
 5. Ask focused clarification questions only for material unresolved requirements.
 6. Present the draft and wait for explicit user approval.
 7. Do not create or update the requirements file before explicit approval is received.
-8. After approval, create or update `requirements.md` at `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/requirements.md`.
+8. After approval, create or update `requirements.md` at `.claude/AgentOutput/<JIRA_ISSUE_KEY>/requirements.md`.
 9. Verify the saved document and report its path and status.
-10. Ask for explicit authorization to commit `requirements.md` after the approved file exists. Requirements approval alone is not commit authorization. If authorized, stage and commit only `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/requirements.md`; report the exact commit hash. Never include unrelated files or push unless separately authorized.
+10. Ask for explicit authorization to commit `requirements.md` after the approved file exists. Requirements approval alone is not commit authorization. If authorized, stage and commit only `.claude/AgentOutput/<JIRA_ISSUE_KEY>/requirements.md`; report the exact commit hash. Never include unrelated files or push unless separately authorized.
 11. Use a commit message that references the validated Jira key. End the message with the trailer `Co-Authored-By: Claude Code <noreply@anthropic.com>`. Do not claim a commit succeeded unless command output confirms it.

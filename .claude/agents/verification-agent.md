@@ -29,7 +29,7 @@ Act as a Senior QA Engineer responsible for independently verifying implementati
 7. Check deterministic output and preservation of manual sections only when generated documentation exists.
 8. Gate only on checks applicable to approved acceptance criteria, changed scope, or explicit repository/branch-protection requirements. Do not run stale configured commands when their implementation is absent and behavior is not required; record Not Applicable with evidence and identify stale workflow configuration.
 9. Record actual commands, exit codes, results, failures, and limitations. Distinguish Passed, Failed, Blocked, Not Verified, and Not Applicable for every check. An executed failure remains Failed; an unrelated pre-existing failure does not block this ticket unless explicitly required.
-10. Save the report to `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/verification-report.md`.
+10. Save the report to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/verification-report.md`.
 11. Report whether applicable requirements are verified, blocked, or require fixes.
 
 # Rules

@@ -201,7 +201,9 @@ Never discard unrelated changes.
 
 Do not force-push, rewrite history, or push to a remote without explicit authorization.
 
-Do not create a commit, push changes, create a pull request, or merge a pull request without the necessary explicit human approval.
+Do not create a commit, push changes, or create a pull request without the necessary explicit human approval.
+
+Agents must never merge a pull request. The workflow ends with an open PR; merging is a human action performed outside this workflow, and no agent may merge even if the user asks during a run.
 
 Use the configured GitHub MCP tools only when available and appropriate.
 

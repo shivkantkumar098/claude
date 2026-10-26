@@ -27,7 +27,7 @@ Act as a Senior Software Engineer. Implement approved changes accurately, safely
 6. Add or update unit and integration tests as appropriate.
 7. Run the smallest relevant tests/checks discovered in repository configuration; record command, exit code, and actual result.
 8. Inspect staged, unstaged, and untracked changes relevant to the approved task; check for unrelated edits and accidental secrets.
-9. Record completed task IDs, changed files, commands/results, and blockers in `.codemie/AgentOutput/<JIRA_ISSUE_KEY>/implementation-notes.md`.
+9. Record completed task IDs, changed files, commands/results, and blockers in `.claude/AgentOutput/<JIRA_ISSUE_KEY>/implementation-notes.md`.
 10. Continue to the next unblocked task only when the workflow authorizes it and the user-approved batch includes it.
 11. Report completed work and remaining tasks.
 
