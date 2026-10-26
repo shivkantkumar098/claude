@@ -127,6 +127,21 @@ h2 {
   color: #5c6678;
 }
 
+.filter-field {
+  margin-bottom: 1rem;
+}
+
+#filter-empty-state,
+#filter-message {
+  margin: 0 0 0.75rem;
+  color: #5c6678;
+}
+
+#filter-empty-state:empty,
+#filter-message:empty {
+  margin: 0;
+}
+
 .load-error {
   margin: 0 0 0.75rem;
   color: #a32232;

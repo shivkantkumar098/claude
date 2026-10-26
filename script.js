@@ -2,6 +2,49 @@ const TRANSACTION_STORAGE_KEY = "transactions";
 const TRANSACTION_SCHEMA_VERSION = 1;
 const TRANSACTION_TYPES = ["Expense", "Money Received"];
 const AMOUNT_PATTERN = /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/;
+const FILTER_STORAGE_KEY = "transactionFilter";
+const TRANSACTION_FILTERS = {
+  all: null,
+  income: "Money Received",
+  expenses: "Expense",
+};
+const DEFAULT_FILTER = "all";
+
+const isKnownFilter = (value) =>
+  typeof value === "string" && Object.hasOwn(TRANSACTION_FILTERS, value);
+
+const filterTransactions = (list, filter) => {
+  if (!isKnownFilter(filter) || TRANSACTION_FILTERS[filter] === null) {
+    return list;
+  }
+  return list.filter(
+    (transaction) => transaction.type === TRANSACTION_FILTERS[filter],
+  );
+};
+
+const filterPreference = {
+  read() {
+    try {
+      const stored = window.localStorage.getItem(FILTER_STORAGE_KEY);
+      if (stored === null || stored === undefined) {
+        return { value: DEFAULT_FILTER, unknown: false };
+      }
+      if (isKnownFilter(stored)) {
+        return { value: stored, unknown: false };
+      }
+      return { value: DEFAULT_FILTER, unknown: true };
+    } catch (error) {
+      return { value: DEFAULT_FILTER, unknown: false };
+    }
+  },
+  write(value) {
+    try {
+      window.localStorage.setItem(FILTER_STORAGE_KEY, value);
+    } catch (error) {
+      // The filter preference is non-critical; keep working in memory.
+    }
+  },
+};
 
 const parseAmountToPaise = (value) => {
   const normalizedValue = String(value).trim();
@@ -275,6 +318,9 @@ const formError = document.getElementById("form-error");
 const saveStatus = document.getElementById("save-status");
 const loadError = document.getElementById("load-error");
 const retryLoadButton = document.getElementById("retry-load");
+const filterSelect = document.getElementById("transaction-filter");
+const filterEmptyState = document.getElementById("filter-empty-state");
+const filterMessage = document.getElementById("filter-message");
 const fieldErrorElements = {
   amount: document.getElementById("amount-error"),
   type: document.getElementById("type-error"),
@@ -290,6 +336,24 @@ let transactions = [];
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
+let activeFilter = DEFAULT_FILTER;
+let lastBalanceInPaise = null;
+
+const setActiveFilter = (value, { persist = true } = {}) => {
+  activeFilter = isKnownFilter(value) ? value : DEFAULT_FILTER;
+  if (filterSelect) {
+    filterSelect.value = activeFilter;
+  }
+  if (persist) {
+    filterPreference.write(activeFilter);
+  }
+};
+
+const setFilterMessage = (message) => {
+  if (filterMessage) {
+    filterMessage.textContent = message;
+  }
+};
 
 const showElement = (element, visible) => {
   if (element) {
@@ -387,7 +451,8 @@ const createTransactionElement = (transaction) => {
 const renderTransactions = (nextTransactions, balanceInPaise) => {
   const list = document.createElement("div");
   list.className = "transaction-list";
-  nextTransactions.forEach((transaction) => {
+  const visibleTransactions = filterTransactions(nextTransactions, activeFilter);
+  visibleTransactions.forEach((transaction) => {
     list.append(createTransactionElement(transaction));
   });
 
@@ -395,6 +460,13 @@ const renderTransactions = (nextTransactions, balanceInPaise) => {
   balanceAmount.textContent = formatINR(balanceInPaise);
   balanceAmount.hidden = false;
   emptyState.hidden = nextTransactions.length !== 0;
+  if (filterEmptyState) {
+    filterEmptyState.textContent =
+      nextTransactions.length > 0 && visibleTransactions.length === 0
+        ? "Not found"
+        : "";
+  }
+  lastBalanceInPaise = balanceInPaise;
 };
 
 const renderLoadFailure = (error) => {
@@ -403,6 +475,13 @@ const renderLoadFailure = (error) => {
   balanceAmount.hidden = true;
   emptyState.hidden = true;
   transactionHistory.replaceChildren();
+  if (filterSelect) {
+    filterSelect.disabled = true;
+  }
+  if (filterEmptyState) {
+    filterEmptyState.textContent = "";
+  }
+  setFilterMessage("");
   loadError.textContent =
     error instanceof Error
       ? `${error.message} No empty history is being shown.`
@@ -425,6 +504,9 @@ const loadTransactions = () => {
     transactions = loadedTransactions;
     repositoryReady = true;
     saveButton.disabled = false;
+    if (filterSelect) {
+      filterSelect.disabled = false;
+    }
     showElement(loadError, false);
     showElement(retryLoadButton, false);
   } catch (error) {
@@ -505,6 +587,13 @@ if (transactionForm) {
       }
 
       transactions = updatedTransactions;
+      if (
+        activeFilter !== DEFAULT_FILTER &&
+        filterTransactions([transaction], activeFilter).length === 0
+      ) {
+        setActiveFilter(DEFAULT_FILTER);
+        setFilterMessage("");
+      }
       transactionForm.reset();
       transactionDateInput.value = getLocalDateString();
       try {
@@ -525,6 +614,36 @@ if (transactionForm) {
 
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
+}
+
+if (filterSelect) {
+  filterSelect.addEventListener("change", () => {
+    if (!repositoryReady) {
+      return;
+    }
+
+    const selected = filterSelect.value;
+    if (isKnownFilter(selected)) {
+      setFilterMessage("");
+    } else {
+      setFilterMessage("unknown value");
+    }
+    setActiveFilter(selected);
+
+    try {
+      renderTransactions(transactions, lastBalanceInPaise);
+    } catch (error) {
+      // Leave the previous view in place; filtering never alters stored data.
+    }
+  });
+}
+
+// Read the saved filter once at startup, before the first load (not on Retry).
+const storedFilter = filterPreference.read();
+setActiveFilter(storedFilter.value, { persist: false });
+if (storedFilter.unknown) {
+  setFilterMessage("unknown value");
+  setActiveFilter(DEFAULT_FILTER);
 }
 
 loadTransactions();
