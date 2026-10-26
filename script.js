@@ -1,9 +1,6 @@
 const TRANSACTION_STORAGE_KEY = "transactions";
 const TRANSACTION_SCHEMA_VERSION = 1;
 const TRANSACTION_TYPES = ["Expense", "Money Received"];
-const TRANSACTION_ADDED_MESSAGE = "Transaction added.";
-const TRANSACTION_ADDED_HIDDEN_MESSAGE =
-  "Transaction added. It is hidden by the current filter.";
 const AMOUNT_PATTERN = /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/;
 
 const parseAmountToPaise = (value) => {
@@ -53,24 +50,6 @@ const calculateAvailableBalance = (transactions) =>
 
     return nextBalance;
   }, 10_000);
-
-const FILTER_TYPE_BY_KEY = Object.freeze({
-  income: "Money Received",
-  expenses: "Expense",
-});
-
-const FILTER_EMPTY_MESSAGE_BY_KEY = Object.freeze({
-  income: "No income transactions found.",
-  expenses: "No expense transactions found.",
-});
-
-const normalizeFilterKey = (value) =>
-  value === "all" || Object.hasOwn(FILTER_TYPE_BY_KEY, value) ? value : "all";
-
-const filterTransactionsByType = (transactions, filter) =>
-  Object.hasOwn(FILTER_TYPE_BY_KEY, filter)
-    ? transactions.filter(({ type }) => type === FILTER_TYPE_BY_KEY[filter])
-    : transactions;
 
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -290,8 +269,6 @@ const transactionAmountInput = document.getElementById("transaction-amount");
 const transactionNoteInput = document.getElementById("transaction-note");
 const transactionHistory = document.getElementById("transaction-history");
 const emptyState = document.getElementById("empty-state");
-const transactionFilter = document.getElementById("transaction-filter");
-const filterEmptyState = document.getElementById("filter-empty-state");
 const balanceAmount = document.getElementById("balance-amount");
 const saveButton = document.getElementById("save-transaction");
 const formError = document.getElementById("form-error");
@@ -310,7 +287,6 @@ const fieldInputs = {
 };
 
 let transactions = [];
-let activeFilter = "all";
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
@@ -409,10 +385,9 @@ const createTransactionElement = (transaction) => {
 };
 
 const renderTransactions = (nextTransactions, balanceInPaise) => {
-  const visibleTransactions = filterTransactionsByType(nextTransactions, activeFilter);
   const list = document.createElement("div");
   list.className = "transaction-list";
-  visibleTransactions.forEach((transaction) => {
+  nextTransactions.forEach((transaction) => {
     list.append(createTransactionElement(transaction));
   });
 
@@ -420,10 +395,6 @@ const renderTransactions = (nextTransactions, balanceInPaise) => {
   balanceAmount.textContent = formatINR(balanceInPaise);
   balanceAmount.hidden = false;
   emptyState.hidden = nextTransactions.length !== 0;
-  filterEmptyState.textContent =
-    nextTransactions.length > 0 && visibleTransactions.length === 0
-      ? (FILTER_EMPTY_MESSAGE_BY_KEY[activeFilter] ?? "")
-      : "";
 };
 
 const renderLoadFailure = (error) => {
@@ -431,8 +402,6 @@ const renderLoadFailure = (error) => {
   saveButton.disabled = true;
   balanceAmount.hidden = true;
   emptyState.hidden = true;
-  filterEmptyState.textContent = "";
-  transactionFilter.disabled = true;
   transactionHistory.replaceChildren();
   loadError.textContent =
     error instanceof Error
@@ -456,7 +425,6 @@ const loadTransactions = () => {
     transactions = loadedTransactions;
     repositoryReady = true;
     saveButton.disabled = false;
-    transactionFilter.disabled = false;
     showElement(loadError, false);
     showElement(retryLoadButton, false);
   } catch (error) {
@@ -472,14 +440,10 @@ const setFormError = (message) => {
   showElement(formError, Boolean(message));
 };
 
-const clearSaveStatus = () => {
-  saveStatus.textContent = "";
-  showElement(saveStatus, false);
-};
-
 const clearSubmissionFeedback = () => {
   setFormError("");
-  clearSaveStatus();
+  saveStatus.textContent = "";
+  showElement(saveStatus, false);
 };
 
 if (transactionForm) {
@@ -545,10 +509,7 @@ if (transactionForm) {
       transactionDateInput.value = getLocalDateString();
       try {
         renderTransactions(transactions, updatedBalance);
-        saveStatus.textContent =
-          filterTransactionsByType([transaction], activeFilter).length === 0
-            ? TRANSACTION_ADDED_HIDDEN_MESSAGE
-            : TRANSACTION_ADDED_MESSAGE;
+        saveStatus.textContent = "Transaction added.";
         showElement(saveStatus, true);
       } catch (error) {
         setFormError(
@@ -562,34 +523,8 @@ if (transactionForm) {
   });
 }
 
-if (transactionFilter) {
-  transactionFilter.addEventListener("change", () => {
-    if (!repositoryReady || isLoading) {
-      transactionFilter.value = activeFilter;
-      return;
-    }
-
-    const previousFilter = activeFilter;
-    clearSaveStatus();
-    setFormError("");
-    try {
-      activeFilter = normalizeFilterKey(transactionFilter.value);
-      transactionFilter.value = activeFilter;
-      renderTransactions(transactions, calculateAvailableBalance(transactions));
-    } catch (error) {
-      activeFilter = previousFilter;
-      transactionFilter.value = previousFilter;
-      setFormError("The filter could not be applied. The previous view is kept.");
-    }
-  });
-}
-
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
-}
-
-if (transactionFilter) {
-  transactionFilter.value = activeFilter;
 }
 
 loadTransactions();
