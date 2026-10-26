@@ -97,9 +97,19 @@
         <button class="retry-load hide" id="retry-load" type="button">
           Retry loading transactions
         </button>
+        <div class="field filter-field">
+          <label for="transaction-filter">Show</label>
+          <select id="transaction-filter" name="filter">
+            <option value="all">All</option>
+            <option value="income">Income</option>
+            <option value="expenses">Expenses</option>
+          </select>
+        </div>
+        <p id="filter-message" role="status"></p>
         <p id="empty-state" hidden>
           No transactions yet. Add one to get started.
         </p>
+        <p id="filter-empty-state" role="status"></p>
         <div id="transaction-history" aria-live="polite"></div>
       </section>
     </main>

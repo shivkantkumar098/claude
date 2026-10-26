@@ -97,13 +97,13 @@ const createStorage = (seed = {}, options = {}) => {
   return {
     values,
     getItem(key) {
-      if (options.failReads) {
+      if (options.failReads || options.failKeys?.has(key)) {
         throw new Error("storage read denied");
       }
       return values.has(key) ? values.get(key) : null;
     },
     setItem(key, value) {
-      if (options.failWrites) {
+      if (options.failWrites || options.failKeys?.has(key)) {
         throw new Error("storage quota exceeded");
       }
       values.set(key, String(value));
@@ -129,6 +129,9 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
+    "filter-empty-state",
+    "filter-message",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -136,6 +139,7 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
+  elements["transaction-filter"].value = "all";
 
   let nextId = 1;
   const window = {
@@ -158,7 +162,9 @@ const createApp = (storage = createStorage()) => {
       formatTransactionDate,
       isValidTransactionDate,
       validateTransaction,
-      transactionRepository
+      transactionRepository,
+      filterTransactions,
+      isKnownFilter
     };`,
     context,
     { filename: "script.js" },
@@ -188,6 +194,9 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
+    "filter-empty-state",
+    "filter-message",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
@@ -459,4 +468,217 @@ test("integration: unsafe legacy value blocks migration without altering source 
   assert.equal(storage.values.has("transactions"), false);
   assert.equal(storage.values.get("expenses"), expenses);
   assert.equal(storage.values.get("budget"), "800");
+});
+
+const FILTER_ENVELOPE = JSON.stringify({
+  schemaVersion: 1,
+  transactions: [
+    { id: "t1", type: "Money Received", amountInPaise: 5000, date: "2026-10-01" },
+    { id: "t2", type: "Expense", amountInPaise: 1000, date: "2026-10-02" },
+    { id: "t3", type: "Expense", amountInPaise: 500, date: "2026-10-03" },
+  ],
+});
+
+const itemTypes = (elements) =>
+  (elements["transaction-history"].children[0]?.children || []).map(
+    (item) => item.children[0].children[0].textContent,
+  );
+
+const chooseFilter = (elements, value) => {
+  elements["transaction-filter"].value = value;
+  elements["transaction-filter"].dispatch("change");
+};
+
+const addTransaction = (elements, type, amount = "1") => {
+  elements["transaction-amount"].value = amount;
+  elements["transaction-type"].value = type;
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-form"].dispatch("submit");
+};
+
+test("unit: filterTransactions maps Income/Expenses and rejects prototype keys", () => {
+  const { context } = createApp();
+  const { filterTransactions, isKnownFilter } = context.__appTest;
+  const list = [{ type: "Money Received" }, { type: "Expense" }, { type: "Expense" }];
+
+  assert.equal(filterTransactions(list, "all").length, 3);
+  assert.deepEqual(filterTransactions(list, "income").map((t) => t.type), ["Money Received"]);
+  assert.deepEqual(filterTransactions(list, "expenses").map((t) => t.type), ["Expense", "Expense"]);
+  for (const key of ["__proto__", "constructor", "toString", "", "bogus", null, 1]) {
+    assert.equal(isKnownFilter(key), false, `${String(key)} must be unknown`);
+  }
+  assert.equal(filterTransactions(list, "constructor").length, 3);
+});
+
+test("integration: index.html has a labeled three-option filter and permanent status paragraphs", () => {
+  assert.match(htmlSource, /<label\b[^>]*for="transaction-filter"/);
+  const select = htmlSource.match(/<select\b[^>]*id="transaction-filter"[^>]*>([\s\S]*?)<\/select>/);
+  assert.ok(select, "filter select missing");
+  const options = [
+    ...select[1].matchAll(/<option\b[^>]*value="([^"]*)"[^>]*>\s*([^<]*?)\s*<\/option>/g),
+  ].map((m) => [m[1], m[2]]);
+  assert.deepEqual(options, [
+    ["all", "All"],
+    ["income", "Income"],
+    ["expenses", "Expenses"],
+  ]);
+  for (const id of ["filter-empty-state", "filter-message"]) {
+    const paragraph = htmlSource.match(new RegExp(`<p\\b[^>]*id="${id}"[^>]*>([\\s\\S]*?)</p>`));
+    assert.ok(paragraph, `missing #${id}`);
+    assert.match(paragraph[0], /role="status"/);
+    assert.doesNotMatch(paragraph[0], /\bhidden\b/);
+    assert.equal(paragraph[1].trim(), "");
+  }
+});
+
+test("integration: filters show matching items, All restores, balance and storage unchanged", () => {
+  const storage = createStorage({ transactions: FILTER_ENVELOPE });
+  const { elements } = createApp(storage);
+  const balance = elements["balance-amount"].textContent;
+
+  assert.equal(itemTypes(elements).length, 3);
+  chooseFilter(elements, "income");
+  assert.deepEqual(itemTypes(elements), ["Money Received"]);
+  chooseFilter(elements, "expenses");
+  assert.deepEqual(itemTypes(elements), ["Expense", "Expense"]);
+  assert.equal(elements["balance-amount"].textContent, balance);
+  chooseFilter(elements, "all");
+  assert.equal(itemTypes(elements).length, 3);
+  assert.equal(elements["balance-amount"].textContent, balance);
+  assert.equal(storage.values.get("transactions"), FILTER_ENVELOPE);
+});
+
+test("integration: no matches shows Not found, not the empty-history message", () => {
+  const envelope = JSON.stringify({
+    schemaVersion: 1,
+    transactions: [{ id: "t1", type: "Expense", amountInPaise: 100, date: "2026-10-01" }],
+  });
+  const { elements } = createApp(createStorage({ transactions: envelope }));
+
+  chooseFilter(elements, "income");
+  assert.equal(elements["filter-empty-state"].textContent, "Not found");
+  assert.equal(itemTypes(elements).length, 0);
+  assert.equal(elements["empty-state"].hidden, true);
+  chooseFilter(elements, "all");
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: empty history shows No transactions yet for every filter", () => {
+  const { elements } = createApp(createStorage());
+  for (const value of ["all", "income", "expenses"]) {
+    chooseFilter(elements, value);
+    assert.equal(elements["empty-state"].hidden, false, value);
+    assert.equal(elements["filter-empty-state"].textContent, "", value);
+  }
+});
+
+test("integration: default is All and the selection is restored after reload", () => {
+  const storage = createStorage({ transactions: FILTER_ENVELOPE });
+  let app = createApp(storage);
+  assert.equal(app.elements["transaction-filter"].value, "all");
+  assert.equal(app.elements["filter-message"].textContent, "");
+
+  chooseFilter(app.elements, "income");
+  assert.equal(storage.values.get("transactionFilter"), "income");
+
+  app = createApp(storage);
+  assert.equal(app.elements["transaction-filter"].value, "income");
+  assert.deepEqual(itemTypes(app.elements), ["Money Received"]);
+});
+
+test("integration: unknown or empty stored filter shows unknown value and falls back to All", () => {
+  for (const stored of ["bogus", ""]) {
+    const storage = createStorage({ transactions: FILTER_ENVELOPE, transactionFilter: stored });
+    const { elements } = createApp(storage);
+
+    assert.equal(elements["filter-message"].textContent, "unknown value", stored);
+    assert.equal(elements["transaction-filter"].value, "all");
+    assert.equal(itemTypes(elements).length, 3);
+    assert.equal(storage.values.get("transactionFilter"), "all");
+  }
+});
+
+test("integration: adding a transaction hidden by the filter resets to All", () => {
+  const storage = createStorage({ transactions: FILTER_ENVELOPE });
+  const { elements } = createApp(storage);
+  chooseFilter(elements, "income");
+
+  addTransaction(elements, "Expense", "2");
+
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.equal(storage.values.get("transactionFilter"), "all");
+  assert.equal(itemTypes(elements).length, 4);
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+});
+
+test("integration: adding a matching transaction keeps the filter", () => {
+  const storage = createStorage({ transactions: FILTER_ENVELOPE });
+  const { elements } = createApp(storage);
+  chooseFilter(elements, "income");
+
+  addTransaction(elements, "Money Received", "2");
+
+  assert.equal(elements["transaction-filter"].value, "income");
+  assert.equal(itemTypes(elements).length, 2);
+});
+
+test("integration: failed save leaves the active filter and stored preference unchanged", () => {
+  const options = {};
+  const storage = createStorage({ transactions: FILTER_ENVELOPE }, options);
+  const { elements } = createApp(storage);
+  chooseFilter(elements, "income");
+
+  options.failKeys = new Set(["transactions"]);
+  addTransaction(elements, "Expense", "2");
+
+  assert.match(elements["form-error"].textContent, /could not be saved/i);
+  assert.equal(elements["transaction-filter"].value, "income");
+  assert.equal(storage.values.get("transactionFilter"), "income");
+  assert.deepEqual(itemTypes(elements), ["Money Received"]);
+});
+
+test("integration: load failure disables the filter and ignores changes", () => {
+  const storage = createStorage({}, { failReads: true });
+  const { elements } = createApp(storage);
+
+  assert.equal(elements["transaction-filter"].disabled, true);
+  chooseFilter(elements, "income");
+  assert.equal(storage.values.has("transactionFilter"), false);
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(elements["balance-amount"].hidden, true);
+  assert.notEqual(elements["load-error"].textContent, "");
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: after Retry succeeds the filter is enabled and the startup preference is kept", () => {
+  const options = { failKeys: new Set(["transactions"]) };
+  const storage = createStorage(
+    { transactions: FILTER_ENVELOPE, transactionFilter: "income" },
+    options,
+  );
+  const { elements } = createApp(storage);
+  assert.equal(elements["transaction-filter"].disabled, true);
+
+  storage.values.set("transactionFilter", "expenses");
+  options.failKeys = new Set();
+  elements["retry-load"].dispatch("click");
+
+  assert.equal(elements["transaction-filter"].disabled, false);
+  assert.equal(elements["transaction-filter"].value, "income");
+  assert.deepEqual(itemTypes(elements), ["Money Received"]);
+});
+
+test("integration: preference-only storage failure keeps filtering working in memory", () => {
+  const storage = createStorage(
+    { transactions: FILTER_ENVELOPE },
+    { failKeys: new Set(["transactionFilter"]) },
+  );
+  const { elements } = createApp(storage);
+
+  assert.equal(elements["filter-message"].textContent, "");
+  assert.equal(elements["transaction-filter"].value, "all");
+  assert.doesNotThrow(() => chooseFilter(elements, "expenses"));
+  assert.deepEqual(itemTypes(elements), ["Expense", "Expense"]);
+  assert.equal(elements["filter-message"].textContent, "");
+  assert.equal(elements["load-error"].textContent, "");
 });

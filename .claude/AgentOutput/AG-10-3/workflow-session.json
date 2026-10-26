@@ -2,32 +2,41 @@
   "jiraIssueKey": "AG-10",
   "runId": "AG-10-3",
   "branch": "feature/AG-10-3",
-  "currentStage": "1 - Requirements Analysis (approved); next: 2 - Architecture Design",
+  "currentStage": "8 - Pull Request Preparation",
   "stageStatuses": {
     "1-requirements-analysis": "approved",
-    "2-architecture-design": "not started",
-    "3-design-review": "not started",
-    "4-implementation-planning": "not started",
-    "5-implementation": "not started",
-    "6-code-review": "not started",
-    "7-verification": "not started",
-    "8-pull-request-preparation": "not started"
+    "2-architecture-design": "approved",
+    "3-design-review": "approved",
+    "4-implementation-planning": "approved",
+    "5-implementation": "approved",
+    "6-code-review": "approved",
+    "7-verification": "approved",
+    "8-pull-request-preparation": "approved (PR summary draft only)"
   },
   "artifactPaths": {
     "requirements": ".claude/AgentOutput/AG-10-3/requirements.md",
+    "architecture": ".claude/AgentOutput/AG-10-3/architecture.md",
     "workflowSession": ".claude/AgentOutput/AG-10-3/workflow-session.json"
   },
-  "approvalStatus": "Stage 1 approved; later stages not approved",
-  "approvalEvidence": "User message 'approve stage 1' received 2026-10-26 during run AG-10-3, after revised draft with decisions D-1..D-12",
-  "outstandingQuestions": [
-    "Design-level (Stage 2): localStorage key name and behavior when localStorage is unavailable",
-    "Design-level (Stage 2): which list is shown with the 'unknown value' message (assumed: All)"
-  ],
+  "approvalStatus": "Stages 1-8 approved. Commit, push and PR creation authorized by user.",
+  "approvalEvidence": {
+    "stage1": "User message 'approved stage 1' (run AG-10-3). Note: decisions D-1..D-12 in requirements.md were recorded by an agent and their provenance was not independently verified before the user approved the document.",
+    "stage2": "User message 'use the defaults and APPROVE' (run AG-10-3): no visible storage notice, select control, no extra reset feedback, AS-1..AS-6 accepted.",
+    "stage3": "User message 'approving stage 3' with decisions: F-4 = 'No transcation yet' (i.e. 'No transactions yet' when whole history is empty, even with a non-All filter); F-3 = permanent role=\"status\" containers. design-review.md required changes F-1/F-2 to be folded into design (approve with changes).",
+    "stage4": "User message 'approved stage 4' (run AG-10-3).",
+    "stage5": "User message 'approved stage 5' (run AG-10-3). T12 manual Chrome checks and screen-reader check were not run at approval time.",
+    "stage6": "User message 'approve stage 6' (run AG-10-3) with decisions: fix M-1 by asserting transactionFilter is not written to storage after a change during a load failure; ignore L-2 and L-3 (not to be listed as PR known limitations).",
+    "stage7": "User message 'approved stage 7' (run AG-10-3). Manual Chrome and screen-reader checks were not run at approval time.",
+    "stage8": "User message 'approved stage 8' (run AG-10-3). Approves the PR summary draft only; does not authorize commit, push or PR creation.",
+    "gitActions": "User message 'keep a8ed0d6, commit, push, open the PR, L-2/L-3 stay out' (run AG-10-3)."
+  },
+  "outstandingQuestions": [],
   "knownRisks": [
     "Persisting the filter adds a second storage item and failure modes",
     "No CI and no package.json; verification limited to node --test",
     "No prior AG-10 workflow artifacts or approval evidence exist to validate earlier runs",
-    "Unrelated untracked analytics JSON in working tree"
+    "Unrelated untracked analytics JSON in working tree",
+    "Commit a8ed0d6 (Stage 1 artifacts) was made by an agent without explicit commit authorization; it is local and unpushed"
   ],
-  "lastCompletedAction": "Recorded user approval of Stage 1 in requirements.md and workflow-session.json. Not committed; commit authorization not yet given."
+  "lastCompletedAction": "Committing Stage 2-8 artifacts and implementation, then push and open PR (user-authorized). Merge is a human action outside this workflow."
 }
