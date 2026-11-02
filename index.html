@@ -93,6 +93,42 @@
 
       <section class="history-card" aria-labelledby="history-heading">
         <h2 id="history-heading">Transaction history</h2>
+        <fieldset class="history-filter hide" id="history-filter">
+          <legend>Filter by type</legend>
+          <div class="filter-options">
+            <span class="filter-option">
+              <input
+                type="radio"
+                name="history-filter"
+                id="filter-all"
+                value="all"
+                autocomplete="off"
+                checked
+              />
+              <label for="filter-all">All</label>
+            </span>
+            <span class="filter-option">
+              <input
+                type="radio"
+                name="history-filter"
+                id="filter-income"
+                value="income"
+                autocomplete="off"
+              />
+              <label for="filter-income">Income</label>
+            </span>
+            <span class="filter-option">
+              <input
+                type="radio"
+                name="history-filter"
+                id="filter-expenses"
+                value="expenses"
+                autocomplete="off"
+              />
+              <label for="filter-expenses">Expenses</label>
+            </span>
+          </div>
+        </fieldset>
         <p id="load-error" class="load-error hide" role="alert"></p>
         <button class="retry-load hide" id="retry-load" type="button">
           Retry loading transactions
