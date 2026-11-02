@@ -120,8 +120,16 @@ const createStorage = (seed = {}, options = {}) => {
 // options.emptyStateHidden (default true) mirrors the shipped `<p id="empty-state" hidden>`.
 // options.windowEvents, when an object, gives the window stub an addEventListener that records
 // listeners into it; by default the stub has none, which exercises the guarded pageshow path.
+// options.omitIds (default none) removes those ids from the fake page so getElementById returns null.
+// options.filterHiddenAtStart (default true) mirrors the shipped `hide` class on #history-filter;
+// false starts the filter visible so only script code can hide it.
 const createApp = (storage = createStorage(), options = {}) => {
-  const { emptyStateHidden = true, windowEvents = null } = options;
+  const {
+    emptyStateHidden = true,
+    windowEvents = null,
+    omitIds = [],
+    filterHiddenAtStart = true,
+  } = options;
   const ids = [
     "history-filter",
     "filter-all",
@@ -143,7 +151,7 @@ const createApp = (storage = createStorage(), options = {}) => {
     "amount-error",
     "type-error",
     "date-error",
-  ];
+  ].filter((id) => !omitIds.includes(id));
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
     element.id = id;
@@ -151,7 +159,9 @@ const createApp = (storage = createStorage(), options = {}) => {
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
   // Mirror the shipped markup: the filter ships with `hide`, #empty-state ships `hidden`.
-  elements["history-filter"].className = "hide";
+  if (elements["history-filter"] && filterHiddenAtStart) {
+    elements["history-filter"].className = "hide";
+  }
   elements["empty-state"].hidden = emptyStateHidden;
 
   let nextId = 1;
@@ -192,7 +202,7 @@ const createApp = (storage = createStorage(), options = {}) => {
     { filename: "script.js" },
   );
 
-  return { context, elements, storage };
+  return { context, elements, storage, document };
 };
 
 const transactionsFrom = (storage) =>
@@ -774,7 +784,11 @@ test("integration: Income with only expenses stored shows a live-region message,
     true,
   );
   assert.equal(elements["empty-state"].hidden, true);
-  assert.equal(elements["empty-state"].textContent, "");
+  // The add prompt must not be rendered into the history region in place of the filter message.
+  assert.equal(
+    collectText(elements["transaction-history"]).includes("No transactions yet"),
+    false,
+  );
 });
 
 test("integration: Expenses with only income stored shows the expense message", () => {
@@ -1058,8 +1072,10 @@ test("integration: a load failure after a successful load hides the filter and c
 });
 
 test("integration: start-up with saved records shows no load-error state (activeFilter declared before first use)", () => {
-  const { elements } = createApp(envelopeStorage(MIXED), { emptyStateHidden: false });
+  const { context, elements } = createApp(envelopeStorage(MIXED), { emptyStateHidden: false });
 
+  // Behavioral guard for the declaration order: reading activeFilter before its `let` runs would
+  // throw inside the first load, which would surface as a load-error state instead of the list.
   assert.equal(elements["load-error"].textContent, "");
   assert.equal(hasClass(elements["load-error"], "hide"), true);
   assert.equal(hasClass(elements["retry-load"], "hide"), true);
@@ -1068,10 +1084,8 @@ test("integration: start-up with saved records shows no load-error state (active
   assert.equal(elements["balance-amount"].hidden, false);
   assert.equal(renderedArticles(elements).length, 4);
   assert.equal(elements["empty-state"].hidden, true);
-  assert.equal(
-    appSource.indexOf("let activeFilter") < appSource.lastIndexOf("loadTransactions();"),
-    true,
-  );
+  assert.equal(context.__appTest.getActiveFilter(), "all");
+  assert.deepEqual(radioStates(elements), { all: true, income: false, expenses: false });
 });
 
 test("integration: start-up projects the All selection onto every radio explicitly", () => {
@@ -1114,4 +1128,164 @@ test("integration: pageshow re-projects the in-memory selection onto the radios 
   assert.deepEqual(radioStates(elements), { all: false, income: true, expenses: false });
   assert.deepEqual(renderedTexts(elements), incomeList);
   assert.equal(incomeList.length, 2);
+});
+
+// ---------------------------------------------------------------------------
+// AG-10 follow-up (Batch 4): gap tests G-1..G-4 from the Stage 7 verification report
+// ---------------------------------------------------------------------------
+
+test("integration: a render failure inside setActiveFilter leaves the committed filter, radios, and list untouched", () => {
+  const { context, elements, document } = createApp(envelopeStorage(MIXED));
+  const { setActiveFilter, getActiveFilter } = context.__appTest;
+  const history = elements["transaction-history"];
+  const listNodeBefore = history.children[0];
+  const textsBefore = renderedTexts(elements);
+  assert.equal(textsBefore.length, 4);
+  assert.equal(getActiveFilter(), "all");
+
+  // Make the next createElement call (the first one the filter render makes) throw once.
+  const realCreateElement = document.createElement;
+  let injectedFailures = 0;
+  document.createElement = (tagName) => {
+    if (injectedFailures === 0) {
+      injectedFailures += 1;
+      throw new Error("injected createElement failure");
+    }
+    return realCreateElement(tagName);
+  };
+
+  // Render-first, commit-after: the throw must happen before activeFilter is assigned.
+  assert.throws(() => setActiveFilter("income"), /injected createElement failure/);
+  assert.equal(injectedFailures, 1, "the injected failure must have fired inside the render");
+  assert.equal(getActiveFilter(), "all", "activeFilter was committed before the render finished");
+  assert.deepEqual(radioStates(elements), { all: true, income: false, expenses: false });
+  assert.equal(history.children[0], listNodeBefore, "the rendered list node was replaced");
+  assert.equal(history.children.length, 1);
+  assert.deepEqual(renderedTexts(elements), textsBefore);
+
+  // Same through the change listener: the failure propagates and nothing is committed.
+  injectedFailures = 0;
+  assert.throws(() => selectFilter(elements, "expenses"), /injected createElement failure/);
+  assert.equal(injectedFailures, 1);
+  assert.equal(getActiveFilter(), "all");
+  assert.deepEqual(radioStates(elements), { all: true, income: false, expenses: false });
+  assert.deepEqual(renderedTexts(elements), textsBefore);
+
+  // Once the fault is gone the same call succeeds and commits normally.
+  document.createElement = realCreateElement;
+  setActiveFilter("income");
+  assert.equal(getActiveFilter(), "income");
+  assert.deepEqual(radioStates(elements), { all: false, income: true, expenses: false });
+  assert.equal(renderedArticles(elements).length, 2);
+});
+
+test("integration: start-up and the add flow work when the filter elements are missing from the page", () => {
+  const filterIds = ["history-filter", "filter-all", "filter-income", "filter-expenses"];
+  const storage = envelopeStorage([EXPENSE_A, INCOME_A]);
+  const { context, elements } = createApp(storage, {
+    omitIds: filterIds,
+    emptyStateHidden: false,
+  });
+
+  for (const id of filterIds) {
+    assert.equal(elements[id], undefined, `#${id} should be absent from the fake page`);
+  }
+  assert.equal(elements["load-error"].textContent, "");
+  assert.equal(hasClass(elements["load-error"], "hide"), true);
+  assert.equal(hasClass(elements["retry-load"], "hide"), true);
+  assert.equal(elements["save-transaction"].disabled, false);
+  assert.equal(elements["balance-amount"].hidden, false);
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(context.__appTest.getActiveFilter(), "all");
+  assert.equal(renderedArticles(elements).length, 2);
+
+  addTransaction(elements, { type: "Money Received", amount: "2.00", note: "Bonus" });
+
+  assert.equal(transactionsFrom(storage).length, 3);
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+  assert.equal(elements["form-error"].textContent, "");
+  assert.equal(elements["balance-amount"].textContent, "₹139.66");
+  assert.equal(renderedArticles(elements).length, 3);
+  assert.equal(collectText(elements["transaction-history"]).includes("Bonus"), true);
+
+  // The state setter also tolerates the missing radios.
+  context.__appTest.setActiveFilter("income");
+  assert.equal(context.__appTest.getActiveFilter(), "income");
+  assert.equal(renderedArticles(elements).length, 2);
+  context.__appTest.setActiveFilter("all");
+  assert.equal(renderedArticles(elements).length, 3);
+});
+
+test("integration: start-up with empty storage works when the filter elements are missing", () => {
+  const { elements } = createApp(createStorage(), {
+    omitIds: ["history-filter", "filter-all", "filter-income", "filter-expenses"],
+  });
+
+  assert.equal(elements["load-error"].textContent, "");
+  assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements["save-transaction"].disabled, false);
+
+  addTransaction(elements, { type: "Expense", amount: "1.00" });
+
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+  assert.equal(elements["empty-state"].hidden, true);
+  assert.equal(renderedArticles(elements).length, 1);
+});
+
+const describeNode = (node) => ({
+  tagName: node.tagName,
+  className: node.className,
+  textContent: node.textContent,
+  attributes: { ...node.attributes },
+  children: node.children.map(describeNode),
+});
+
+test("integration: an item is rendered identically under All and under its matching filter", () => {
+  const { elements } = createApp(envelopeStorage(MIXED));
+  const describeAll = () => renderedArticles(elements).map(describeNode);
+
+  // MIXED order: EXPENSE_A, INCOME_A, EXPENSE_B, INCOME_B
+  const underAll = describeAll();
+  assert.equal(underAll.length, 4);
+  // Guard against a vacuous comparison: the with-note and without-note shapes both carry content.
+  assert.deepEqual(
+    underAll[1].children.map((child) => child.className),
+    ["transaction-heading", "transaction-meta", "transaction-note"],
+  );
+  assert.deepEqual(
+    underAll[3].children.map((child) => child.className),
+    ["transaction-heading", "transaction-meta"],
+  );
+  assert.equal(underAll[1].className, "transaction-item");
+  assert.equal(underAll[1].tagName, "article");
+
+  selectFilter(elements, "income");
+  const underIncome = describeAll();
+  assert.equal(underIncome.length, 2);
+  assert.deepEqual(underIncome[0], underAll[1]);
+  assert.deepEqual(underIncome[1], underAll[3]);
+
+  selectFilter(elements, "expenses");
+  const underExpenses = describeAll();
+  assert.equal(underExpenses.length, 2);
+  assert.deepEqual(underExpenses[0], underAll[0]);
+  assert.deepEqual(underExpenses[1], underAll[2]);
+
+  // Back to All reproduces the original structure exactly.
+  selectFilter(elements, "all");
+  assert.deepEqual(describeAll(), underAll);
+});
+
+test("integration: a load failure at start-up hides a filter that was visible, so the hide comes from the script", () => {
+  for (const [label, makeStorage] of failedLoadScenarios) {
+    const { elements } = createApp(makeStorage(), {
+      emptyStateHidden: false,
+      filterHiddenAtStart: false,
+    });
+
+    assert.notEqual(elements["load-error"].textContent, "", `${label}: load-error expected`);
+    assert.equal(hasClass(elements["history-filter"], "hide"), true, `${label}: filter not hidden`);
+    assert.equal(elements["transaction-history"].children.length, 0);
+    assert.equal(elements["empty-state"].hidden, true);
+  }
 });
