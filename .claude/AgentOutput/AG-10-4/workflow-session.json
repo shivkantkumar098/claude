@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 1,
+  "jiraIssueKey": "AG-10",
+  "runId": "AG-10-4",
+  "issue": {
+    "key": "AG-10",
+    "title": "Filter transactions by type",
+    "branch": "feature/AG-10-4"
+  },
+  "currentStage": "Pull Request Preparation",
+  "workflowStatus": "Stage 8 approved; push and PR creation authorized and in progress at time of this commit",
+  "nextAction": "Push feature/AG-10-4, create PR (base main) via gh/MCP; PR number/URL recorded afterwards in an uncommitted local update; merge is human-only",
+  "context": {
+    "keptThroughPlanning": true,
+    "implementationChoice": "Keep current context (default applied; user did not choose)"
+  },
+  "stages": {
+    "1-requirements-analysis": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/requirements.md",
+      "approval": "Approved"
+    },
+    "2-architecture-design": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/architecture.md",
+      "approval": "Draft 2 approved 2026-11-02 (\"approve Draft 2\")"
+    },
+    "3-design-review": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/design-review.md",
+      "approval": "Approved 2026-11-02"
+    },
+    "4-implementation-planning": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/impl-plan.md",
+      "approval": "Approved 2026-11-02 (\"approve stage 4\")"
+    },
+    "5-implementation": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/implementation-notes.md",
+      "approval": "Approved 2026-11-02 (\"1.approve stage 5 2.yes\" / \"approva stage 5\")",
+      "batch4": "Batch 4 (G-1..G-4 + G-4c) implemented in tests/app.test.cjs (uncommitted); 49/49 pass; verified by orchestrator"
+    },
+    "6-code-review": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/code-review.md",
+      "approval": "Approved 2026-11-02 (\"1.approve 2. yes 3. yes 4. yes\")"
+    },
+    "7-verification": {
+      "status": "Passed",
+      "artifact": ".claude/AgentOutput/AG-10-4/verification-report.md",
+      "approval": "Approved 2026-11-02 (\"1.approve 2.yes\")"
+    },
+    "8-pull-request-preparation": {
+      "status": "Passed (artifact approved); push and PR creation pending at time of this commit",
+      "artifact": ".claude/AgentOutput/AG-10-4/pr-summary.md",
+      "approval": "Approved 2026-11-02 (\"1. yes 2. yes 3.yes 4. yes\")"
+    }
+  },
+  "artifactPaths": {
+    "requirements": ".claude/AgentOutput/AG-10-4/requirements.md",
+    "workflowSession": ".claude/AgentOutput/AG-10-4/workflow-session.json",
+    "architecture": ".claude/AgentOutput/AG-10-4/architecture.md",
+    "designReview": ".claude/AgentOutput/AG-10-4/design-review.md",
+    "implPlan": ".claude/AgentOutput/AG-10-4/impl-plan.md",
+    "implementationNotes": ".claude/AgentOutput/AG-10-4/implementation-notes.md",
+    "codeReview": ".claude/AgentOutput/AG-10-4/code-review.md",
+    "verificationReport": ".claude/AgentOutput/AG-10-4/verification-report.md",
+    "prSummary": ".claude/AgentOutput/AG-10-4/pr-summary.md"
+  },
+  "approvalStatus": "Stages 1-8 approved. Authorized by user 2026-11-02: commit pr-summary.md; commit workflow-session.json; push feature/AG-10-4 (plain, no force); create PR base main head feature/AG-10-4. Merge never authorized/performed.",
+  "approvalEvidence": {
+    "stage1Q1toQ11": "User answered open questions Q-01..Q-11 (relayed via coordinator, 2026-11-02) but did NOT say APPROVE; treated as requested changes. Not approval of requirements.md.",
+    "stage1Start": "User replied 'yes' (relayed via coordinator, 2026-11-02) to: approve starting Stage 1 (Requirements Analysis) for AG-10-4. Authorizes starting Stage 1 only; not approval of requirements.md or any later stage, and not authorization to commit, push or open a PR.",
+    "runSelection": "User chose to start a fresh run AG-10-4 from scratch and confirmed run ID AG-10-4 and artifact directory .claude/AgentOutput/AG-10-4/ (relayed via coordinator, 2026-11-02). This is not approval of any SDLC stage.",
+    "worktreeCleanup": "User asked for the three untracked docs/codemie/analytics/*.json files to be removed; worktree confirmed clean on feature/AG-10-4 at 5c36761 (== main == origin/main).",
+    "stage1": "User message \"approve stage 1\" (relayed via coordinator, 2026-11-02): approves requirements.md revision 2 including assumptions A-02, A-04, A-09. Does not authorize Stage 2, commit, push or PR.",
+    "stage2Start": "User message \"begin Architecture Design\" (relayed via coordinator, 2026-11-02): authorizes starting Stage 2 only.",
+    "requirementsCommit": "User message \"commit it\" (relayed via coordinator, 2026-11-02): authorizes committing requirements.md only, no push, no PR. Committed as c2a435c on feature/AG-10-4; workflow-session.json left uncommitted.",
+    "stage2": "User message \"approve stage 2\" (relayed via coordinator, 2026-11-02), replying to the Stage 2 report: approves architecture.md including PD-01..PD-05 and listed assumptions. Does not authorize Stage 3, commit, push or PR.",
+    "stage3Start": "User reply \"yes\" (relayed via coordinator, 2026-11-02) to: begin Stage 3 (Design Review). Authorizes starting Stage 3 only.",
+    "architectureCommit": "User reply \"yes\" (relayed via coordinator, 2026-11-02) to: commit architecture.md. Authorizes that commit only, no push, no PR. Committed as 9b19c82; workflow-session.json left uncommitted.",
+    "stage3": "User reply \"yes,APPROVE Stage 3\" (relayed via coordinator, 2026-11-02). Decisions: approve ALL of P-1..P-5; manual browser checks (AC-007 reload, AC-013/NFR-001 announcements, NFR-003 at 600px) to be run by user or a reviewer at Verification; keep autocomplete=\"off\" as best-effort with explicit two-browser reload check at Verification. Covers Stage 3 only; does not approve the amended architecture text, Stage 4, commit, push or PR.",
+    "architectureDraft2": "User message \"approve Draft 2\" (relayed via coordinator, 2026-11-02): approves amended architecture.md Draft 2 (P-1..P-5). Does not authorize Stage 4, push or PR.",
+    "stage3Decisions": "User decisions (relayed 2026-11-02): DR-012 accepted as unreachable (chosen explicitly after follow-up), no extra guard; DR-011 and DR-014 carried into the Stage 4 implementation plan, not the architecture text; DR-013 ignored (stale Section 3 Git-status row not relabelled).",
+    "stage3Commit": "User reply \"Commit: yes\" (relayed 2026-11-02): authorizes committing design-review.md and architecture.md only; workflow-session.json uncommitted; no push, no PR.",
+    "stage4Start": "User message \"start stage 4\" (relayed via coordinator, 2026-11-02): authorizes starting Stage 4 only. Not authorization for Stage 5, code edits, push or PR.",
+    "stage4": "User message \"approve stage 4\" (relayed via coordinator, 2026-11-02): approves impl-plan.md including PL-01 (guarded pageshow re-sync), PL-02, PL-04 and the three-batch split. Does not authorize implementation, code edits, commit, push or PR.",
+    "batch1": "User reply \"approve\" (relayed via coordinator, 2026-11-02) to the three-question message (commit impl-plan.md / context / Batch 1). Interpreted as approval of Batch 1 (TASK-001..007) only. Context not chosen: default keep-current-context applied. Commit of impl-plan.md NOT authorized (bare \"approve\" is not a clear commit authorization); to be asked again at end of Batch 1.",
+    "batch1CompleteAndBatch2": "User reply \"yes\" (relayed via coordinator, 2026-11-02) to: (1) approve Batch 1 as complete and approve Batch 2 (TASK-008..015); (2) authorize commit of impl-plan.md and Batch 1 code. Batch 3 not approved.",
+    "commitsImplPlanAndBatch1": "User reply \"yes\" (relayed 2026-11-02): authorizes local commits of impl-plan.md and the Batch 1 code only; no push, no PR. Batch 2 test changes and anything else need new authorization.",
+    "batch2CompleteBatch3AndTestsCommit": "User reply \"1.yes 2.yes.1 yes\" (relayed via coordinator, 2026-11-02) to my three questions. Interpreted: (1) Batch 2 complete and Batch 3 (TASK-016) approved; (2) commit of tests/app.test.cjs authorized (local only, no push/PR); (3) deletion of leftover mut-* temp folders NOT authorized (garbled answer; policy hook had blocked it) - ask again at end.",
+    "stage5": "User reply \"1.approve stage 5 2.yes\" and, after a follow-up, \"approva stage 5\" (relayed via coordinator, 2026-11-02): explicit approval of Stage 5 (Implementation). Covers Stage 5 only; does not authorize Stage 6, push or PR.",
+    "notesCommit": "User reply \"2.yes\" (relayed 2026-11-02): authorizes local commit of implementation-notes.md only; no push, no PR. Deletion of leftover mut-* temp folders: not authorized, user will handle them.",
+    "stage6Start": "User message \"start stage 6\" (relayed via coordinator, 2026-11-02): authorizes starting Stage 6 only. Not authorization for Stage 7, code edits, commit, push or PR.",
+    "stage6": "User reply \"1.approve 2. yes 3. yes 4. yes\" (relayed via coordinator, 2026-11-02), with question 2 clarified after a follow-up: Stage 6 approved; CR-001 and CR-002 accepted and deferred (CR-002 to be settled in manual check M-4; no fix batch); CR-007 left as is (implementation-notes.md not edited); commit of code-review.md authorized (local only, no push/PR). Covers Stage 6 only; does not authorize Stage 7, push or PR.",
+    "stage7Start": "User reply \"yes\" (relayed via coordinator, 2026-11-02) to: start Stage 7 (Verification). Authorizes starting Stage 7 only. Not authorization for Stage 8, code edits, commit, push or PR.",
+    "stage7ReworkDecisions": "User reply \"1.approve 2.yes 3.written 4.yes\" plus clarifications (relayed via coordinator, 2026-11-02): (3) gap tests G-1..G-4 to be WRITTEN as new approved Batch 4 limited to tests/app.test.cjs, no application changes; sequencing chosen explicitly: write tests, re-verify, update verification-report.md, THEN ask for Stage 7 approval, so the bare \"approve\" is NOT recorded as Stage 7 approval; (2) manual checks M-1..M-4 and TASK-007 visual check: user chose \"Accept as Not Run\" - explicit acceptance of the gap, items remain reported Not Run (manual), never Passed; (4) commit: nothing to be committed yet; after re-verification ask whether to commit updated tests/app.test.cjs and verification-report.md as two separate local commits (no push).",
+    "stage7": "User reply \"1.approve 2.yes\" (relayed via coordinator, 2026-11-02) to the Revision 2 report: (1) Stage 7 approved for verification-report.md Revision 2, with M-1..M-4 and TASK-007 visual check recorded as Not Run (manual) by the user's explicit acceptance; (2) two separate local commits authorized (tests/app.test.cjs; verification-report.md), no push, no PR. Covers Stage 7 only; does not authorize Stage 8, push or PR.",
+    "stage8Start": "User reply \"1. start stage 8 2.yes\" (relayed via coordinator, 2026-11-02): (1) authorizes starting Stage 8 (PR preparation) only; (2) \"yes\" authorizes committing workflow-session.json with the branch, timing: as the final commit after Stage 8 final state is recorded and the user approves pr-summary.md, just before the push step; stage by name, secret check, local commit only. NOT authorized: push, PR creation (gh or MCP), merge.",
+    "stage8": "User reply \"1. yes 2. yes 3.yes 4. yes\" (relayed via coordinator, 2026-11-02) to four numbered questions: (1) approve pr-summary.md incl. proposed PR title and body; (2) commit pr-summary.md (local, staged by name); (3) push feature/AG-10-4 to origin after committing workflow-session.json as final local commit and re-running secret scan over main..HEAD (stop if a real secret is found; plain push -u origin feature/AG-10-4, no force/rewrite/other branches); (4) create the PR base main head feature/AG-10-4 with approved title/body via authenticated gh or GitHub MCP; do not close/comment on/modify PR #2 or any other PR; never merge."
+  },
+  "preflight": {
+    "originReachable": "Passed (git ls-remote exit 0)",
+    "ghAuthenticated": "Passed (shivkantkumar098, repo scope)",
+    "mainOnOriginAndLocal": "Passed (5c36761)",
+    "branchBasedOnMain": "Passed (0 behind, 10 ahead of origin/main; main == origin/main == 5c36761)",
+    "trackedSecretFiles": "None tracked; .env and .mcp.json git-ignored",
+    "newTestFilesCommitted": "Not applicable yet",
+    "secretScanMainToHead": "Pattern scan of added lines main..HEAD: no credential values; only prose descriptions of scan patterns in artifacts",
+    "featureBranchOnOrigin": "Not pushed (feature/AG-10-4 absent on origin)"
+  },
+  "priorRuns": [
+    "AG-10-1: PR #1 merged then reverted on main (5c36761); no artifacts",
+    "AG-10-2: local branch only; no artifacts",
+    "AG-10-3: PR #2 open, unmerged; artifacts on feature/AG-10-3 only"
+  ],
+  "agentRuns": [
+    {
+      "agent": "pr-agent",
+      "stage": "Pull Request (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T15:05:00Z",
+      "completedAt": "2026-11-02T15:20:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/pr-summary.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/pr-summary.md"
+      ],
+      "checkpoint": "pr-summary.md marked APPROVED (Stage 8) and committed locally as 4d8b779."
+    },
+    {
+      "agent": "pr-agent",
+      "stage": "Pull Request Preparation (draft only)",
+      "status": "Passed (draft produced; tests re-run by orchestrator)",
+      "startedAt": "2026-11-02T14:35:00Z",
+      "completedAt": "2026-11-02T14:50:00Z",
+      "inputs": [
+        "all stage artifacts",
+        "git log main..HEAD",
+        "git diff main...HEAD"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/pr-summary.md"
+      ],
+      "checkpoint": "Draft PR title \"AG-10: Filter transactions by type (run AG-10-4)\"; source feature/AG-10-4, target main. PR template and changelog: Not Found (changelog N/A). Open PR #2 (AG-10-3) duplicate noted. Nothing staged/committed/pushed/PR-created/merged."
+    },
+    {
+      "agent": "verification-agent",
+      "stage": "Verification (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T14:10:00Z",
+      "completedAt": "2026-11-02T14:25:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/verification-report.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/verification-report.md"
+      ],
+      "checkpoint": "verification-report.md marked APPROVED (Stage 7, Revision 2), verified and committed locally as 38281d5."
+    },
+    {
+      "agent": "verification-agent",
+      "stage": "Verification update after Batch 4",
+      "status": "Passed (Revision 2 written; automated results re-verified by orchestrator)",
+      "startedAt": "2026-11-02T13:42:00Z",
+      "completedAt": "2026-11-02T14:00:00Z",
+      "inputs": [
+        "verification-report.md",
+        "tests/app.test.cjs"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/verification-report.md"
+      ],
+      "checkpoint": "Revision 2: 49/49 tests pass (twice), node --check ok, diff-check ok; AC 11 Passed + AC-007/AC-013 split; NFR 3 Passed + NFR-001 split, NFR-003 Not Run (manual), NFR-005 N/A. M-1..M-4 and TASK-007 visual Not Run (manual), gap explicitly accepted by user. CR-003/CR-004 closed, CR-001 narrowed. Mutation testing not run in this revision (agent Batch 4 mutants were agent-reported). Secret-history scan before push still required."
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation Batch 4 (gap tests G-1..G-4)",
+      "status": "Passed (Batch 4 implemented; verified by orchestrator)",
+      "startedAt": "2026-11-02T13:20:00Z",
+      "completedAt": "2026-11-02T13:40:00Z",
+      "inputs": [
+        "verification-report.md (G-1..G-4)",
+        "tests/app.test.cjs",
+        "script.js"
+      ],
+      "outputs": [
+        "tests/app.test.cjs"
+      ],
+      "checkpoint": "Tests 44 -> 49, all pass (agent ran twice; orchestrator re-ran twice). No app changes. Agent mutation checks on temp copy: CR-001 order mutant caught only by G-1. Leftover temp dir g-verify-kIdeC7 plus mut-* outside repo; user handles."
+    },
+    {
+      "agent": "verification-agent",
+      "stage": "Verification",
+      "status": "Passed (draft produced; automated results re-verified by orchestrator)",
+      "startedAt": "2026-11-02T12:50:00Z",
+      "completedAt": "2026-11-02T13:05:00Z",
+      "inputs": [
+        "requirements.md",
+        "architecture.md",
+        "impl-plan.md",
+        "implementation-notes.md",
+        "code-review.md",
+        "index.html",
+        "script.js",
+        "styles.css",
+        "tests/app.test.cjs"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/verification-report.md"
+      ],
+      "checkpoint": "Automated scope: node --check ok; node --test 44/44 (run twice by agent, deterministic); git diff --check ok. AC: 11 Passed, AC-007/AC-013 automated parts Passed with manual parts Not Run (manual); NFR: 3 Passed, NFR-001 split, NFR-003 Not Run (manual), NFR-005 N/A. M-1..M-4 and TASK-007 visual Not Run (manual). Dependency safety Not Verified/N/A. No failures. Secret-history scan before push still needed. Optional gap tests G-1..G-4 proposed, none written."
+    },
+    {
+      "agent": "code-review-agent",
+      "stage": "Code Review (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T12:30:00Z",
+      "completedAt": "2026-11-02T12:40:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/code-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/code-review.md"
+      ],
+      "checkpoint": "code-review.md marked APPROVED (Stage 6); orchestrator verified 7 CR findings, severities and statuses intact; committed locally."
+    },
+    {
+      "agent": "code-review-agent",
+      "stage": "Code Review",
+      "status": "Passed (draft produced; verified by orchestrator)",
+      "startedAt": "2026-11-02T12:05:00Z",
+      "completedAt": "2026-11-02T12:20:00Z",
+      "inputs": [
+        "git diff main...HEAD",
+        "requirements.md",
+        "architecture.md",
+        "design-review.md",
+        "impl-plan.md",
+        "implementation-notes.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/code-review.md"
+      ],
+      "checkpoint": "Recommended verdict: Approved with advisory findings. 7 findings: 0 Critical/High/Medium, 2 Low (CR-001 untested render-then-commit order; CR-002 touch target), 5 Info (CR-003..007). No blockers. Agent ran 44/44 tests, 15 in-memory mutants (14 killed, CR-001 survived). Manual M-1..M-4 Not Run. Dependency safety Not Verified/Not Applicable."
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T11:45:00Z",
+      "completedAt": "2026-11-02T11:55:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/implementation-notes.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/implementation-notes.md"
+      ],
+      "checkpoint": "implementation-notes.md marked APPROVED (Stage 5), verified by orchestrator, committed locally."
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation Batch 3 (TASK-016)",
+      "status": "Passed (Batch 3 done; verified by orchestrator)",
+      "startedAt": "2026-11-02T11:20:00Z",
+      "completedAt": "2026-11-02T11:35:00Z",
+      "inputs": [
+        "impl-plan.md",
+        "index.html",
+        "script.js",
+        "styles.css",
+        "tests/app.test.cjs"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/implementation-notes.md"
+      ],
+      "checkpoint": "TASK-001..016 done. Orchestrator verified: node --check ok; node --test 44/44 pass; git diff main...HEAD limited to 4 planned files + 4 artifacts. Not run: M-1..M-4 (manual, Verification), TASK-007 visual check. Plan wording issues D-1 (TASK-014b sentinel) and D-2 (TDZ crash vs false load-failure) documented. 24 mut-* temp dirs left outside repo."
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation Batch 2 (TASK-008..015)",
+      "status": "Passed (Batch 2 implemented; verified by orchestrator)",
+      "startedAt": "2026-11-02T10:55:00Z",
+      "completedAt": "2026-11-02T11:10:00Z",
+      "inputs": [
+        "impl-plan.md",
+        "index.html",
+        "script.js",
+        "styles.css",
+        "tests/app.test.cjs"
+      ],
+      "outputs": [
+        "tests/app.test.cjs"
+      ],
+      "checkpoint": "TASK-008..015 done in tests/app.test.cjs only (+660/-5). Orchestrator ran node --test tests/: 44 tests, 44 pass, 0 fail (15 before, 29 new). No app bugs found. Agent reports 12 mutation checks on temp copies all caught; leftover mut-* temp dirs outside repo. Plan wording notes: TASK-014(b) sentinel contradictory; TASK-015 TDZ mutant crashes start-up rather than false load-failure. Manual M-1..M-4 not run."
+    },
+    {
+      "agent": "implementation-agent",
+      "stage": "Implementation Batch 1 (TASK-001..007)",
+      "status": "Passed (Batch 1 implemented; verified by orchestrator)",
+      "startedAt": "2026-11-02T10:35:00Z",
+      "completedAt": "2026-11-02T10:45:00Z",
+      "inputs": [
+        "impl-plan.md",
+        "requirements.md",
+        "architecture.md",
+        "design-review.md"
+      ],
+      "outputs": [
+        "index.html",
+        "script.js",
+        "styles.css"
+      ],
+      "checkpoint": "Batch 1 TASK-001..007 done. Orchestrator verified: git diff only index.html/script.js/styles.css (+154/-9); node --check ok; node --test 15/15 pass; innerHTML 0; storage calls unchanged (lines 160/226/256); schema version 1; pageshow guarded. New behaviour has no automated test until Batch 2; manual M-1..M-4 at Verification."
+    },
+    {
+      "agent": "implementation-planner",
+      "stage": "Implementation Planning (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T10:20:00Z",
+      "completedAt": "2026-11-02T10:28:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/impl-plan.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/impl-plan.md"
+      ],
+      "checkpoint": "impl-plan.md approval state verified by orchestrator (status line APPROVED Stage 4; 20 tasks unchanged, still Not Started; no tracked files modified)."
+    },
+    {
+      "agent": "implementation-planner",
+      "stage": "Implementation Planning",
+      "status": "Passed (draft produced; validated structurally)",
+      "startedAt": "2026-11-02T10:00:00Z",
+      "completedAt": "2026-11-02T10:12:00Z",
+      "inputs": [
+        "requirements.md",
+        "architecture.md (Draft 2)",
+        "design-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/impl-plan.md"
+      ],
+      "checkpoint": "20 tasks (TASK-001..016 Stage 5 in 3 batches; TASK-017..020 manual M-1..M-4 at Verification). Files: index.html, script.js, styles.css, tests/app.test.cjs + implementation-notes.md. DR-011/DR-014 carried. Baseline 15/15 per agent. No blockers."
+    },
+    {
+      "agent": "architecture-agent + design-review-agent",
+      "stage": "Approval-state finalization (architecture Draft 2, design-review DR statuses)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T09:40:00Z",
+      "completedAt": "2026-11-02T09:55:00Z",
+      "inputs": [
+        "architecture.md",
+        "design-review.md"
+      ],
+      "outputs": [
+        "architecture.md",
+        "design-review.md"
+      ],
+      "checkpoint": "Text-only status edits; re-check files on resume."
+    },
+    {
+      "agent": "design-review-agent",
+      "stage": "Design Review focused re-review + approval state",
+      "status": "Passed",
+      "startedAt": "2026-11-02T09:16:00Z",
+      "completedAt": "2026-11-02T09:30:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md",
+        ".claude/AgentOutput/AG-10-4/design-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/design-review.md"
+      ],
+      "checkpoint": "Re-review: P-1..P-5 confirmed (P-4 gap DR-011 Low); no Critical/High/Medium/blockers; new DR-011 Low, DR-012..014 Info. Addendum in design-review.md Section 13; Stage 3 header APPROVED."
+    },
+    {
+      "agent": "architecture-agent",
+      "stage": "Design Review follow-up: apply P-1..P-5",
+      "status": "Passed (amendment applied; unverified until re-review)",
+      "startedAt": "2026-11-02T09:05:00Z",
+      "completedAt": "2026-11-02T09:15:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md",
+        ".claude/AgentOutput/AG-10-4/design-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "checkpoint": "If not done on resume, inspect architecture.md revision notes and re-invoke."
+    },
+    {
+      "agent": "design-review-agent",
+      "stage": "Design Review",
+      "status": "Passed (draft produced; validated structurally)",
+      "startedAt": "2026-11-02T08:50:00Z",
+      "completedAt": "2026-11-02T08:58:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/requirements.md",
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/design-review.md"
+      ],
+      "checkpoint": "Verdict recommended: Approve with changes. 10 findings (0 Critical, 0 High, 3 Medium, 4 Low, 3 Info), no blockers. Proposed architecture changes P-1..P-5 not applied. Agent ran node --test: 15/15 pass."
+    },
+    {
+      "agent": "architecture-agent",
+      "stage": "Architecture Design (approval finalization)",
+      "status": "Passed",
+      "startedAt": "2026-11-02T08:40:00Z",
+      "completedAt": "2026-11-02T08:45:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "checkpoint": "Mark architecture.md approved only; if not done on resume, mark Not Verified and re-invoke."
+    },
+    {
+      "agent": "architecture-agent",
+      "stage": "Architecture Design",
+      "status": "Passed (draft produced; validated structurally)",
+      "startedAt": "2026-11-02T08:25:00Z",
+      "completedAt": "2026-11-02T08:32:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/requirements.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "checkpoint": "Draft proposes PD-01 radio group, PD-02 hide filter on load failure, PD-03..PD-05; baseline node --test 15/15 passed per agent; no open questions; manual checks (screen reader, 600px, form-state restore) deferred to Verification."
+    },
+    {
+      "agent": "requirement-analyst",
+      "stage": "Requirements Analysis (revision 2)",
+      "status": "Passed (revision 2 produced; validated structurally)",
+      "startedAt": "2026-11-02T08:05:00Z",
+      "completedAt": "2026-11-02T08:10:00Z",
+      "inputs": [
+        ".claude/AgentOutput/AG-10-4/requirements.md",
+        "user decisions Q-01..Q-11"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/requirements.md"
+      ],
+      "checkpoint": "Revision 2: D-01..D-11 confirmed; Q-01..Q-11 Resolved; FR-001..013, NFR-001..006, AC-001..013, BR-001..004; status Draft rev 2 / Awaiting Approval."
+    },
+    {
+      "agent": "requirement-analyst",
+      "stage": "Requirements Analysis",
+      "status": "Passed (draft produced; validated structurally)",
+      "startedAt": "2026-11-02T07:55:00Z",
+      "completedAt": "2026-11-02T07:58:00Z",
+      "inputs": [
+        "Jira AG-10"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-4/requirements.md"
+      ],
+      "checkpoint": "Draft has FR-001..012, NFR-001..006, AC-001..013, BR-001..004, A-01..11, Q-01..11; status Draft/Awaiting Approval. Awaiting user answers to Q-01..Q-11 and output approval."
+    }
+  ],
+  "outstandingQuestions": [
+    "PR #2 (AG-10-3) duplicate: human reconciliation required (not touched).",
+    "Merge: human only, outside this workflow.",
+    "Manual checks M-1..M-4 and TASK-007 visual check: Not Run (manual), accepted gap."
+  ],
+  "knownRisks": [
+    "Duplicate work versus open PR #2 may conflict at merge time",
+    "Secret-history scan not yet performed"
+  ],
+  "lastCompletedAction": "pr-summary.md committed (4d8b779). Next: commit this session file, secret-scan main..HEAD, push, create PR.",
+  "updatedAt": "2026-11-02T15:20:00Z",
+  "commits": [
+    {
+      "hash": "c2a435c",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/requirements.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "9b19c82",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/architecture.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "cc90ae8",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/architecture.md",
+        ".claude/AgentOutput/AG-10-4/design-review.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "2d92f74",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/impl-plan.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "ad97230",
+      "files": [
+        "index.html",
+        "script.js",
+        "styles.css"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "818c856",
+      "files": [
+        "tests/app.test.cjs"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "0a71a6f",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/implementation-notes.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "d317962",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/code-review.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "58e91c9",
+      "files": [
+        "tests/app.test.cjs"
+      ],
+      "pushed": false,
+      "note": "Batch 4 gap tests"
+    },
+    {
+      "hash": "38281d5",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/verification-report.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "4d8b779",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/pr-summary.md"
+      ],
+      "pushed": false
+    },
+    {
+      "hash": "(this commit)",
+      "files": [
+        ".claude/AgentOutput/AG-10-4/workflow-session.json"
+      ],
+      "pushed": false,
+      "note": "final session checkpoint committed before push"
+    }
+  ],
+  "carriedToPlan": [
+    "DR-011 (Low): fake #empty-state should start hidden=true so empty-storage assertion is meaningful",
+    "DR-014 (Info): declare let activeFilter before use as default parameter (TDZ); decide on optional pageshow sync; reword M-2 pass condition for back/forward restore; blank line before ## 12 in architecture.md",
+    "Manual checks M-1..M-4 at Verification (user/reviewer): AC-007 reload, AC-013/NFR-001 announcements, NFR-003 600px, two-browser reload"
+  ],
+  "changedFiles": [
+    "index.html",
+    "script.js",
+    "styles.css (committed ad97230)",
+    "tests/app.test.cjs (uncommitted)"
+  ],
+  "findingDecisions": {
+    "CR-001": "Accepted/Deferred (user, explicit after follow-up)",
+    "CR-002": "Accepted/Deferred; settle in manual check M-4",
+    "CR-007": "Left as is by user decision; implementation-notes.md not edited",
+    "CR-003..CR-006": "Info; no action requested"
+  },
+  "acceptedGaps": [
+    "M-1..M-4 manual checks and TASK-007 visual check: accepted as Not Run (manual) by user 2026-11-02; not Passed",
+    "Dependency safety: Not Verified/Not Applicable (no manifests)",
+    "Secret-history scan before any push: still required"
+  ],
+  "pullRequest": {
+    "status": "Not yet created at time of this commit",
+    "base": "main",
+    "head": "feature/AG-10-4",
+    "title": "AG-10: Filter transactions by type (run AG-10-4)",
+    "number": null,
+    "url": null
+  }
+}
