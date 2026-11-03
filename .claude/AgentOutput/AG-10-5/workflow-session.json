@@ -8,7 +8,7 @@
   },
   "currentStage": "Pull Request Preparation",
   "workflowStatus": "In Progress",
-  "nextAction": "pr-agent preparing pr-summary.md only (no push, no PR, no labels). Then ask user for separate authorization to push and create PR. Never merge.",
+  "nextAction": "Executing authorized: commit, push, label, PR creation (in order). Never merge.",
   "context": {
     "keptThroughPlanning": true,
     "implementationChoice": "Keep current context (user, 2026-11-03)"
@@ -53,7 +53,7 @@
     "pullRequest": {
       "status": "In Progress",
       "artifact": "pr-summary.md",
-      "approval": "Pending"
+      "approval": "Approved (draft)"
     }
   },
   "approvalEvidence": [
@@ -108,6 +108,10 @@
     {
       "gate": "Stage 7 approval; CR-1 accepted; start Stage 8 (prepare only); commit verification",
       "evidence": "User message in main session, 2026-11-03: \"1.approve of stage 7 2.keep the wording and accept the risk 3.start 4.yes\". Interpretation: Stage 7 verification approved; CR-1 resolved by keeping \"No transaction found\" and accepting the risk (no source change); start Stage 8 (prepare only); commit verification-report.md and workflow-session.json (no push, no PR)."
+    },
+    {
+      "gate": "Stage 8 PR draft approval; commit, push, label, PR creation authorized",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve 2.yes 3.yes 4.yes 5 yes\". Interpretation: PR draft approved; authorized in order: commit pr-summary.md and workflow-session.json; push feature/AG-10-5 (no force); create ai-generated label; create PR to main. Merge is never authorized."
     }
   ],
   "agentRuns": [
@@ -244,6 +248,20 @@
         "verification-report.md"
       ],
       "checkpoint": "29/29 pass, node --check ok, mutation check 5/29 failed then restored (tree clean); manual screen-reader/browser/Firefox checks NOT RUN."
+    },
+    {
+      "agent": "PR Agent",
+      "stage": "Pull Request Preparation",
+      "status": "Awaiting Approval",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "all stage artifacts"
+      ],
+      "outputs": [
+        "pr-summary.md"
+      ],
+      "checkpoint": "Draft prepared; nothing pushed/created. 7 commits ahead of origin/main; ai-generated label absent on repo."
     }
   ],
   "updatedAt": "2026-11-03T00:00:00Z",
