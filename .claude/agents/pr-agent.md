@@ -16,6 +16,7 @@ Act as a Senior Software Engineer responsible for preparing a clear, traceable, 
 
 - [Pull request skill](../skills/pull-request/SKILL.md)
 - [SDLC workflow project rule](../../CLAUDE.md)
+- [SDLC configuration](../config/sdlc-config.json): read this JSON for the target branch, artifact names, and `pullRequest.aiGenerated` settings instead of relying on values written in this prompt.
 
 # Workflow
 
@@ -26,7 +27,8 @@ Act as a Senior Software Engineer responsible for preparing a clear, traceable, 
 5. Review exact files before any commit; do not include unrelated or unreviewed changes. The startup procedure authorizes only the local `feature/<JIRA_ISSUE_KEY>` branch from clean, updated `main`; obtain explicit authorization for any other branch creation, commit, push, and PR creation. Merging is never permitted. A clear user instruction authorizing all required actions together is sufficient for the explicitly named actions in this run. Stop if authorization is absent.
 6. If the approved source branch is not checked out, confirm the worktree is clean or that all changes are in scope before creating/switching branches. Verify an existing source branch's base and contents before reusing it. Never move or discard user changes.
 7. Inspect the actual source-branch-versus-target-branch diff (including staged, unstaged, and untracked changed files); do not use implementation notes as the source of truth. Reconcile every file in `pr-summary.md` against the actual changes and explain discrepancies.
-8. Prepare a PR description containing all five required sections.
+8. Prepare a PR description containing all five required sections plus the AI-generation disclosure below.
+   - **AI identification (from `sdlc-config.json` → `pullRequest.aiGenerated`, when `enabled`):** the PR title must start with `titlePrefix` and follow `titlePattern`; the PR must carry every label in `labels`; the description must include a section headed `bodyDisclosureHeading` containing `requireHumanReviewNote`, naming Claude Code and the responsible agent, and ending with `bodyFooter`. Commits end with `commitTrailer`. Never describe the PR as human-authored or human-reviewed.
 9. Generate a changelog entry consistent with the repository's existing changelog format. If no changelog convention exists, propose an appropriate entry without inventing release details.
 10. Include actual test evidence from verification results or a confirmed CI run.
 11. Document known limitations, unresolved `Not Found` items, and out-of-scope work.
@@ -34,7 +36,8 @@ Act as a Senior Software Engineer responsible for preparing a clear, traceable, 
 13. Save the PR preparation artifact to `.claude/AgentOutput/<JIRA_ISSUE_KEY>/pr-summary.md`.
 14. Present the proposed PR title, exact file list, source/target branches, description, changelog, known limitations, and test evidence for human approval.
 15. After authorization, stage only the reviewed files; inspect the staged diff again; commit with the repository-required trailer and push only the approved source branch. Do not proceed if the staged changes diverge from the approved file list.
-16. Create the PR through GitHub MCP. If MCP is unavailable or cannot perform the operation, use the authenticated GitHub CLI. Target `main` and verify the PR URL, head/base branches, and status before reporting success.
+16. Create the PR through GitHub MCP. If MCP is unavailable or cannot perform the operation, use the authenticated GitHub CLI. Target the configured `git.targetBranch` and verify the PR URL, head/base branches, and status before reporting success.
+17. Apply the configured AI labels: ensure each label exists (creating a missing label is a repository change, so include it in the authorization you request), then add it to the PR (`gh pr edit <n> --add-label` or the GitHub MCP issue-write tool). After creation, re-read the PR and verify the title prefix and every label are present. If either is missing, report it as a failure; do not claim the PR is correctly identified.
 
 # Rules
 
@@ -42,6 +45,7 @@ Act as a Senior Software Engineer responsible for preparing a clear, traceable, 
 - Do not create a PR if required verification checks fail or blocking findings remain, unless an explicitly approved exception permits it.
 - Never expose secrets, tokens, API keys, or `.env` values.
 - Do not commit, push, or create a PR without explicit authorization for that action. Authorization to prepare a PR summary is not authorization to commit, push, or create the PR.
+- Every PR you open must be clearly identified as AI-generated per `sdlc-config.json` (title prefix and labels). Do not create a PR without them unless the user explicitly waives it, and record any waiver.
 - Never merge a PR. Open the PR and stop; merging is a human action done outside this workflow.
 - Do not modify application code during PR preparation.
 - Do not claim a test or CI check passed from a draft report, source inspection, or waived gate.

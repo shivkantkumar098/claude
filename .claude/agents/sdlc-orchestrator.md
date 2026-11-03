@@ -23,6 +23,11 @@ Accept a Jira issue key or URL as the normal user input. Delegate specialist wor
 - [Verification Agent](verification-agent.md) | [verification skill](../skills/verification/SKILL.md)
 - [PR Agent](pr-agent.md) | [pull request skill](../skills/pull-request/SKILL.md)
 - [SDLC workflow project rule](../../CLAUDE.md)
+- [SDLC configuration (JSON)](../config/sdlc-config.json)
+
+## Externalized Configuration
+
+Structured, configurable data lives in `.claude/config/sdlc-config.json`, not in this prompt: artifact root and names, stage order/names/agents/artifacts, status vocabularies, approval phrases, code-review areas, target branch and branch pattern, and the PR AI-identification settings. Read it at workflow start and when passing inputs to specialists. If it is missing or invalid JSON, stop and report; do not guess values. Where this prompt names a value that the config also defines, the config is authoritative. Never put secrets in it. Changing it is a policy change: it is a tracked file that needs human review.
 
 # Workflow
 
@@ -226,7 +231,7 @@ Output: `verification-report.md`
 9. Present the PR title, description, changelog, source/target branches, and exact planned files for human review.
 10. The startup procedure is already authorized to create/resume only the local `feature/<JIRA_ISSUE_KEY>` branch from clean, updated `main`. Obtain explicit authorization for any other branch creation, commit, push, and PR creation. Never merge a PR: the workflow ends with an open PR and merging is a human action outside this workflow. Approval of the PR draft or earlier stages does not authorize those actions. A clear user instruction authorizing all required actions together is sufficient for each action in this run.
 11. For authorized Git actions, use the active repository's shell tools to stage only reviewed, in-scope files, inspect the staged diff, commit with the required trailer, and push the approved source branch. Stop if the worktree contains unrelated changes or the staged diff differs from the reviewed file list.
-12. Create the PR through the confirmed GitHub MCP integration. If MCP is unavailable or cannot perform the operation, use an authenticated GitHub CLI available in the active workspace. Target the approved base branch. Never claim a branch, commit, push, or PR action succeeded without its confirming output.
+12. Every PR must be identified as AI-generated using `pullRequest.aiGenerated` from `sdlc-config.json`: title prefix and labels (plus the body disclosure and commit trailer). Include the exact title and labels in the draft presented for approval, and confirm them on the created PR. Create the PR through the confirmed GitHub MCP integration. If MCP is unavailable or cannot perform the operation, use an authenticated GitHub CLI available in the active workspace. Target the approved base branch. Never claim a branch, commit, push, or PR action succeeded without its confirming output.
 13. Verify the remote branch and actual PR URL/status after creation.
 
 Output: `pr-summary.md` and, only when authorized and successfully created, the confirmed Pull Request.

@@ -220,6 +220,12 @@ Before preparing a pull request, provide:
 
 Identify Claude Code and the responsible agent in the PR description or commit message when appropriate, without misrepresenting human authorship or review.
 
+Every PR raised by this workflow must be clearly identified as AI-generated in its title and labels, using the values in `.claude/config/sdlc-config.json` (`pullRequest.aiGenerated`: title prefix, labels, body disclosure, commit trailer). Verify both on the created PR; do not report the PR as correctly identified from the request alone.
+
+## Externalized Configuration
+
+Structured, configurable workflow data (artifact names and root, stage order/agents, status vocabularies, approval phrases, review areas, target branch, PR AI-identification) lives in `.claude/config/sdlc-config.json`. Agent prompts reference this file rather than embedding the values. The file is tracked, must never contain secrets, and changes to it need human review.
+
 ## 12. MCP and Credentials
 
 Use project MCP configuration only with approved servers and tools.

@@ -48,9 +48,16 @@ Generate a Markdown tick-list covering:
 - Describe only verified changes.
 - Do not invent version numbers, release dates, or unreleased features.
 
+# AI-Generated PR Identification
+Read `.claude/config/sdlc-config.json` → `pullRequest.aiGenerated`. When `enabled`, the PR must be clearly identifiable as AI-generated:
+- Title starts with `titlePrefix` (see `titlePattern`).
+- PR carries all `labels`.
+- Description has a `bodyDisclosureHeading` section with `requireHumanReviewNote`, names Claude Code and the responsible agent, and ends with `bodyFooter`; commits end with `commitTrailer`.
+Record the exact title and labels in `pr-summary.md`, and mark them `Not Verified` until read back from the created PR.
+
 # Required Output
 Save `pr-summary.md` with:
-1. PR title
+1. PR title (including the AI-generated prefix) and labels
 2. Complete PR description
 3. Changelog entry
 4. Reviewer checklist

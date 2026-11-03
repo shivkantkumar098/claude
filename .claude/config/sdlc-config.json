@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "description": "Structured, configurable data for the Agentic SDLC Orchestrator. Agent prompts reference this file instead of embedding these values. Must never contain secrets.",
+
+  "paths": {
+    "artifactRoot": ".claude/AgentOutput",
+    "artifactDirPattern": ".claude/AgentOutput/<RUN_ID>/",
+    "sessionFile": "workflow-session.json"
+  },
+
+  "git": {
+    "targetBranch": "main",
+    "remote": "origin",
+    "branchPattern": "feature/<RUN_ID>",
+    "repeatRunSuffix": "-<N>"
+  },
+
+  "stages": [
+    { "order": 1, "id": "requirements",        "name": "Requirements Analysis",   "agent": "requirement-analyst",    "artifact": "requirements.md" },
+    { "order": 2, "id": "architecture",        "name": "Architecture Design",     "agent": "architecture-agent",     "artifact": "architecture.md" },
+    { "order": 3, "id": "designReview",        "name": "Design Review",           "agent": "design-review-agent",    "artifact": "design-review.md" },
+    { "order": 4, "id": "implementationPlan",  "name": "Implementation Planning", "agent": "implementation-planner", "artifact": "impl-plan.md" },
+    { "order": 5, "id": "implementation",      "name": "Implementation",          "agent": "implementation-agent",   "artifact": "implementation-notes.md" },
+    { "order": 6, "id": "codeReview",          "name": "Code Review",             "agent": "code-review-agent",      "artifact": "code-review.md" },
+    { "order": 7, "id": "verification",        "name": "Verification",            "agent": "verification-agent",     "artifact": "verification-report.md" },
+    { "order": 8, "id": "pullRequest",         "name": "Pull Request Preparation","agent": "pr-agent",               "artifact": "pr-summary.md" }
+  ],
+
+  "statuses": {
+    "stage": ["Not Started", "In Progress", "Awaiting Approval", "Passed", "Failed", "Blocked", "Not Verified"],
+    "verificationCheck": ["Passed", "Failed", "Blocked", "Not Verified", "Not Applicable"]
+  },
+
+  "approval": {
+    "acceptedPhrases": ["APPROVE", "APPROVED", "Proceed to the next stage"],
+    "note": "Phrases are illustrative of a clear approval; ambiguous responses must be clarified, never inferred."
+  },
+
+  "codeReview": {
+    "areas": ["Correctness", "Security", "Error handling", "Test coverage", "Code clarity", "DRY principle", "Dependency safety"]
+  },
+
+  "pullRequest": {
+    "aiGenerated": {
+      "enabled": true,
+      "titlePrefix": "[AI-Generated]",
+      "labels": [
+        { "name": "ai-generated", "color": "6f42c1", "description": "Pull request prepared by the Claude Code agentic SDLC workflow" }
+      ],
+      "bodyDisclosureHeading": "AI Generation Disclosure",
+      "bodyFooter": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+      "commitTrailer": "Co-Authored-By: Claude Code <noreply@anthropic.com>",
+      "requireHumanReviewNote": "This PR was prepared by AI agents and has not been merged; human review is required. Agent output is not human authorship or human review."
+    },
+    "titlePattern": "<titlePrefix> <JIRA_KEY>: <summary> (run <RUN_ID>)"
+  }
+}
