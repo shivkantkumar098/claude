@@ -6,9 +6,9 @@
     "title": "Filter transactions by type",
     "branch": "feature/AG-10-5"
   },
-  "currentStage": "Requirements Analysis",
+  "currentStage": "Architecture Design",
   "workflowStatus": "In Progress",
-  "nextAction": "Stage 1 approved. Awaiting separate user authorization to commit requirements.md and explicit go-ahead for Stage 2 (Architecture). Do not start either.",
+  "nextAction": "Stage 2 approved. Awaiting separate user instruction to commit architecture.md and to start Stage 3 (Design Review). Do not start either.",
   "context": {
     "keptThroughPlanning": true,
     "implementationChoice": "Pending"
@@ -17,6 +17,11 @@
     "requirements": {
       "status": "Passed",
       "artifact": "requirements.md",
+      "approval": "Approved"
+    },
+    "architecture": {
+      "status": "Passed",
+      "artifact": "architecture.md",
       "approval": "Approved"
     }
   },
@@ -28,6 +33,14 @@
     {
       "gate": "Stage 1 Requirements approval (finalize artifact only; Q3/Q4 defaults accepted)",
       "evidence": "User message in main session, 2026-11-03: \"APPROVE, accept defaults for Q3 and Q4\". Not approval to commit/push or start Stage 2."
+    },
+    {
+      "gate": "Commit requirements artifacts and start Stage 2",
+      "evidence": "User message in main session, 2026-11-03: \"yes for both 2\""
+    },
+    {
+      "gate": "Stage 2 Architecture approval (artifact only; Q-A1..Q-A3 proposals accepted)",
+      "evidence": "User message in main session, 2026-11-03: \"APPROVE, accept proposals for Q-A1 to Q-A3\". Not approval to commit/push or start Stage 3."
     }
   ],
   "agentRuns": [
@@ -44,6 +57,20 @@
         ".claude/AgentOutput/AG-10-5/requirements.md"
       ],
       "checkpoint": "requirements.md approved by user with Q1/Q2 answers and Q3/Q4 defaults accepted. Not committed."
+    },
+    {
+      "agent": "Architecture Agent",
+      "stage": "Architecture Design",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        ".claude/AgentOutput/AG-10-5/requirements.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/architecture.md"
+      ],
+      "checkpoint": "architecture.md approved by user; Q-A1..Q-A3 resolved. Not committed."
     }
   ],
   "updatedAt": "2026-11-03T00:00:00Z"
