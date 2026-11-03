@@ -6,12 +6,12 @@
     "title": "Filter transactions by type",
     "branch": "feature/AG-10-5"
   },
-  "currentStage": "Design Review (complete); next: Implementation Planning (not started)",
+  "currentStage": "Implementation",
   "workflowStatus": "In Progress",
-  "nextAction": "Stage 2 rev 2 and Stage 3 re-review approved. Awaiting separate user confirmation to (a) commit artifacts and (b) start Stage 4. Carry N-1/N-2/N-3/N-5 as impl-plan constraints; N-4 manual screen-reader check = Stage 7 not-run item. AR-7 open.",
+  "nextAction": "Implementation agent running T-1..T-11; then present for Stage 5 approval. No Stage 6.",
   "context": {
     "keptThroughPlanning": true,
-    "implementationChoice": "Pending"
+    "implementationChoice": "Keep current context (user, 2026-11-03)"
   },
   "stages": {
     "requirements": {
@@ -29,6 +29,11 @@
       "artifact": "design-review.md",
       "approval": "Approved (incl. focused re-review)",
       "note": "Re-review approved; original Stage 3 evidence unchanged."
+    },
+    "planning": {
+      "status": "Passed",
+      "artifact": "impl-plan.md",
+      "approval": "Approved"
     }
   },
   "approvalEvidence": [
@@ -63,6 +68,14 @@
     {
       "gate": "Architecture rev 2 + focused re-review approval; F-3/F-7 confirmed; N-1/2/3/5 as impl-plan constraints",
       "evidence": "User message in main session, 2026-11-03: \"Approve al\" (truncated; orchestrator interpretation: approves architecture.md revision 2, the focused re-review, F-3 and F-7 as recommended, N-1/N-2/N-3/N-5 as impl-plan constraints, N-4 accepted with manual screen-reader check recorded as a Stage 7 not-run item; AR-7 formError wording deferred to planning). The message is ambiguous, so it is NOT authorization to commit, push, or start Stage 4."
+    },
+    {
+      "gate": "Commit Stage 3 artifacts and start Stage 4",
+      "evidence": "User message in main session, 2026-11-03: \"yes for both 2\""
+    },
+    {
+      "gate": "Stage 4 plan approval; AR-7 wording; context keep; batch T-1..T-11 dependency order; commit plan",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve 2.\"No trnasaction found\" 3.[keep current 4. depnedecy order 5 yes\". Orchestrator interpretation: plan approved incl. N-5 approach and markup inside .history-card; AR-7 message = \"No transaction found\" (typo \"trnasaction\" corrected); keep current context; implement T-1..T-11 in dependency order; commit impl-plan.md and workflow-session.json (no push)."
     }
   ],
   "agentRuns": [
@@ -137,10 +150,24 @@
         "design-review.md section 9"
       ],
       "checkpoint": "F-1..F-7 resolved; N-1..N-5 new, no blockers."
+    },
+    {
+      "agent": "Implementation Planner",
+      "stage": "Implementation Planning",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "requirements.md",
+        "architecture.md rev 2",
+        "design-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/impl-plan.md"
+      ],
+      "checkpoint": "T-1..T-11 drafted, no blockers; AR-7 placeholder FILTER_FAILURE_MESSAGE pending user wording."
     }
   ],
   "updatedAt": "2026-11-03T00:00:00Z",
-  "openQuestions": [
-    "AR-7: wording of formError message for filter failure (defer to planning)"
-  ]
+  "openQuestions": []
 }
