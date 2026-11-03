@@ -111,7 +111,7 @@ const createStorage = (seed = {}, options = {}) => {
   };
 };
 
-const createApp = (storage = createStorage()) => {
+const createApp = (storage = createStorage(), initialFilterValue = "all") => {
   const ids = [
     "transaction-date",
     "transaction-form",
@@ -129,6 +129,9 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
+    "history-filter",
+    "history-filter-row",
+    "filter-empty-state",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -136,6 +139,7 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
+  elements["history-filter"].value = initialFilterValue;
 
   let nextId = 1;
   const window = {
@@ -158,7 +162,10 @@ const createApp = (storage = createStorage()) => {
       formatTransactionDate,
       isValidTransactionDate,
       validateTransaction,
-      transactionRepository
+      transactionRepository,
+      HISTORY_FILTERS,
+      filterTransactions,
+      FILTER_FAILURE_MESSAGE
     };`,
     context,
     { filename: "script.js" },
@@ -188,9 +195,30 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
+    "history-filter",
+    "history-filter-row",
+    "filter-empty-state",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
+
+  assert.match(htmlSource, /<label\b[^>]*for="history-filter"[^>]*>\s*Show\s*<\/label>/);
+  const selectMatch = htmlSource.match(/<select\b[^>]*id="history-filter"[^>]*>([\s\S]*?)<\/select>/);
+  assert.ok(selectMatch, "missing history filter select");
+  assert.match(selectMatch[0], /autocomplete="off"/);
+  const options = [...selectMatch[1].matchAll(/<option\b([^>]*)>\s*([^<]*?)\s*<\/option>/g)].map(
+    (match) => ({ value: /value="([^"]*)"/.exec(match[1])[1], text: match[2], attrs: match[1] }),
+  );
+  assert.deepEqual(
+    options.map(({ value, text }) => [value, text]),
+    [
+      ["all", "All"],
+      ["income", "Income"],
+      ["expenses", "Expenses"],
+    ],
+  );
+  assert.match(options[0].attrs, /\bselected\b/);
+  assert.match(htmlSource, /<p id="filter-empty-state" role="status"><\/p>/);
 
   assert.match(htmlSource, /<form\b[^>]*id="transaction-form"/);
   assert.match(htmlSource, /<button\b[^>]*id="save-transaction"[^>]*type="submit"/);
@@ -459,4 +487,294 @@ test("integration: unsafe legacy value blocks migration without altering source 
   assert.equal(storage.values.has("transactions"), false);
   assert.equal(storage.values.get("expenses"), expenses);
   assert.equal(storage.values.get("budget"), "800");
+});
+
+const seedStorage = (entries) =>
+  createStorage({
+    transactions: JSON.stringify({ schemaVersion: 1, transactions: entries }),
+  });
+
+const MIXED = [
+  { id: "t1", type: "Money Received", amountInPaise: 10000, date: "2026-10-01" },
+  { id: "t2", type: "Expense", amountInPaise: 2500, date: "2026-10-02", note: "Lunch" },
+  { id: "t3", type: "Money Received", amountInPaise: 500, date: "2026-10-03" },
+  { id: "t4", type: "Expense", amountInPaise: 100, date: "2026-10-04" },
+];
+
+const changeFilter = (elements, value) => {
+  elements["history-filter"].value = value;
+  elements["history-filter"].dispatch("change");
+};
+
+const listItems = (elements) => elements["transaction-history"].children[0].children;
+
+const itemTypes = (elements) =>
+  listItems(elements).map((item) => item.children[0].children[0].textContent);
+
+const domSnapshot = (elements) =>
+  JSON.stringify({
+    types: elements["transaction-history"].children.length ? itemTypes(elements) : [],
+    text: collectText(elements["transaction-history"]),
+    balance: elements["balance-amount"].textContent,
+    balanceHidden: elements["balance-amount"].hidden,
+    emptyHidden: elements["empty-state"].hidden,
+    filterMessage: elements["filter-empty-state"].textContent,
+    rowClass: elements["history-filter-row"].className,
+  });
+
+const failArticleCreation = (context) => {
+  const originalCreate = context.document.createElement;
+  context.document.createElement = (tag) => {
+    if (tag === "article") {
+      throw new Error("forced render failure");
+    }
+    return originalCreate(tag);
+  };
+  return () => {
+    context.document.createElement = originalCreate;
+  };
+};
+
+test("unit: filterTransactions filters by type without mutating or reordering", () => {
+  const { context } = createApp();
+  const { filterTransactions, HISTORY_FILTERS } = context.__appTest;
+  const input = MIXED.map((entry) => ({ ...entry }));
+  const before = JSON.stringify(input);
+
+  assert.equal(
+    filterTransactions(input, "income").map(({ id }) => id).join(","),
+    "t1,t3",
+  );
+  assert.equal(
+    filterTransactions(input, "expenses").map(({ id }) => id).join(","),
+    "t2,t4",
+  );
+  const all = filterTransactions(input, "all");
+  assert.equal(all.map(({ id }) => id).join(","), "t1,t2,t3,t4");
+  assert.notEqual(all, input);
+  for (const unknown of ["x", "constructor", "__proto__", undefined, null, 5]) {
+    assert.equal(
+      filterTransactions(input, unknown).map(({ id }) => id).join(","),
+      "t1,t2,t3,t4",
+      `unknown key ${String(unknown)} should behave as All`,
+    );
+  }
+  assert.equal(JSON.stringify(input), before);
+  assert.equal(HISTORY_FILTERS.income.emptyMessage, "No income transactions.");
+  assert.equal(HISTORY_FILTERS.expenses.emptyMessage, "No expense transactions.");
+});
+
+test("integration: filter defaults to All, narrows to Income/Expenses, and returns to All", () => {
+  const { elements } = createApp(seedStorage(MIXED));
+
+  assert.equal(elements["history-filter"].value, "all");
+  assert.deepEqual(itemTypes(elements), ["Money Received", "Expense", "Money Received", "Expense"]);
+  assert.equal(elements["history-filter-row"].className.includes("hide"), false);
+
+  changeFilter(elements, "income");
+  assert.deepEqual(itemTypes(elements), ["Money Received", "Money Received"]);
+  changeFilter(elements, "expenses");
+  assert.deepEqual(itemTypes(elements), ["Expense", "Expense"]);
+  changeFilter(elements, "all");
+  assert.deepEqual(itemTypes(elements), ["Money Received", "Expense", "Money Received", "Expense"]);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+});
+
+test("integration: balance and stored data are unchanged by filtering", () => {
+  const storage = seedStorage(MIXED);
+  const stored = storage.values.get("transactions");
+  const { elements } = createApp(storage);
+  const balance = elements["balance-amount"].textContent;
+
+  for (const value of ["income", "expenses", "all"]) {
+    changeFilter(elements, value);
+    assert.equal(elements["balance-amount"].textContent, balance);
+    assert.equal(elements["balance-amount"].hidden, false);
+    assert.equal(storage.values.get("transactions"), stored);
+  }
+});
+
+test("integration: filter with no matches shows exact message and keeps empty-state hidden", () => {
+  const { context, elements } = createApp(seedStorage([MIXED[0], MIXED[2]]));
+  const { HISTORY_FILTERS } = context.__appTest;
+
+  changeFilter(elements, "expenses");
+  assert.equal(itemTypes(elements).length, 0);
+  assert.equal(elements["filter-empty-state"].textContent, HISTORY_FILTERS.expenses.emptyMessage);
+  assert.equal(elements["empty-state"].hidden, true);
+
+  changeFilter(elements, "income");
+  assert.equal(elements["filter-empty-state"].textContent, "");
+
+  const second = createApp(seedStorage([MIXED[1]]));
+  changeFilter(second.elements, "income");
+  assert.equal(
+    second.elements["filter-empty-state"].textContent,
+    second.context.__appTest.HISTORY_FILTERS.income.emptyMessage,
+  );
+});
+
+test("integration: empty history shows only the original empty state under every filter", () => {
+  const { elements } = createApp();
+
+  for (const value of ["income", "expenses", "all"]) {
+    changeFilter(elements, value);
+    assert.equal(elements["empty-state"].hidden, false);
+    assert.equal(elements["filter-empty-state"].textContent, "");
+    assert.equal(elements["history-filter-row"].className.includes("hide"), false);
+  }
+});
+
+test("integration: adding a transaction keeps the active filter and persists", () => {
+  const storage = seedStorage([MIXED[0]]);
+  const { elements } = createApp(storage);
+  changeFilter(elements, "income");
+
+  elements["transaction-amount"].value = "10";
+  elements["transaction-type"].value = "Expense";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-form"].dispatch("submit");
+
+  assert.equal(transactionsFrom(storage).length, 2);
+  assert.equal(elements["history-filter"].value, "income");
+  assert.deepEqual(itemTypes(elements), ["Money Received"]);
+  assert.equal(elements["balance-amount"].textContent, "₹190.00");
+  assert.equal(elements["save-status"].textContent, "Transaction added.");
+
+  elements["transaction-amount"].value = "5";
+  elements["transaction-type"].value = "Money Received";
+  elements["transaction-date"].value = "2026-10-15";
+  elements["transaction-form"].dispatch("submit");
+  assert.deepEqual(itemTypes(elements), ["Money Received", "Money Received"]);
+  changeFilter(elements, "expenses");
+  assert.deepEqual(itemTypes(elements), ["Expense"]);
+});
+
+test("integration: markup-like notes stay literal text under each filter", () => {
+  const noteValue = "<img src=x onerror=alert(1)>";
+  const { elements } = createApp(seedStorage([{ ...MIXED[1], note: noteValue }, MIXED[0]]));
+
+  for (const value of ["all", "expenses", "income", "all"]) {
+    changeFilter(elements, value);
+    const history = elements["transaction-history"];
+    assert.equal(collectTagNames(history).includes("img"), false);
+    if (value !== "income") {
+      assert.equal(collectText(history).includes(noteValue), true);
+    }
+  }
+});
+
+test("integration: filter change is a no-op while the repository is not ready", () => {
+  const { elements } = createApp(createStorage({ transactions: "{bad json" }));
+  const before = domSnapshot(elements);
+
+  changeFilter(elements, "income");
+
+  assert.equal(domSnapshot(elements), before);
+  assert.equal(elements["form-error"].textContent, "");
+});
+
+test("integration: unknown select value normalises to All", () => {
+  const { elements } = createApp(seedStorage(MIXED));
+  changeFilter(elements, "income");
+
+  changeFilter(elements, "constructor");
+
+  assert.equal(elements["history-filter"].value, "all");
+  assert.equal(itemTypes(elements).length, 4);
+});
+
+test("integration: load failure hides filter row and message; retry restores them", () => {
+  const options = { failReads: true };
+  const storage = seedStorage(MIXED);
+  const failing = {
+    values: storage.values,
+    getItem: (key) => {
+      if (options.failReads) {
+        throw new Error("storage read denied");
+      }
+      return storage.getItem(key);
+    },
+    setItem: (key, value) => storage.setItem(key, value),
+  };
+  const { elements } = createApp(failing);
+
+  assert.equal(elements["history-filter-row"].className.includes("hide"), true);
+  assert.equal(elements["filter-empty-state"].textContent, "");
+  assert.equal(elements["empty-state"].hidden, true);
+
+  options.failReads = false;
+  elements["retry-load"].dispatch("click");
+  assert.equal(elements["history-filter-row"].className.includes("hide"), false);
+  assert.equal(itemTypes(elements).length, 4);
+});
+
+test("integration: failed filter render leaves DOM untouched and restores the previous filter (N-2, F-2)", () => {
+  const { context, elements } = createApp(seedStorage([MIXED[0], MIXED[2]]));
+  const { FILTER_FAILURE_MESSAGE } = context.__appTest;
+  changeFilter(elements, "income");
+  const before = domSnapshot(elements);
+
+  const restore = failArticleCreation(context);
+  changeFilter(elements, "all");
+  restore();
+
+  assert.equal(domSnapshot(elements), before);
+  assert.equal(elements["history-filter"].value, "income");
+  assert.notEqual(elements["form-error"].textContent, "");
+  assert.equal(elements["form-error"].textContent, FILTER_FAILURE_MESSAGE);
+  assert.equal(elements["form-error"].className.includes("hide"), false);
+
+  // The previous filter is still the active one for later renders.
+  elements["transaction-amount"].value = "1";
+  elements["transaction-type"].value = "Expense";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-form"].dispatch("submit");
+  assert.deepEqual(itemTypes(elements), ["Money Received", "Money Received"]);
+});
+
+test("integration: formatINR as the only throwing call does not mutate the DOM (N-2)", () => {
+  const { context, elements } = createApp(seedStorage([MIXED[1], MIXED[3]]));
+  const before = domSnapshot(elements);
+
+  // Income view has zero rows, so the balance formatting is the only formatINR call.
+  vm.runInContext(
+    `globalThis.__origNumberFormat = Intl.NumberFormat;
+     Intl.NumberFormat = function () { throw new Error("forced format failure"); };`,
+    context,
+  );
+  try {
+    changeFilter(elements, "income");
+  } finally {
+    vm.runInContext("Intl.NumberFormat = globalThis.__origNumberFormat;", context);
+  }
+
+  assert.equal(domSnapshot(elements), before);
+  assert.equal(elements["history-filter"].value, "all");
+  assert.notEqual(elements["form-error"].textContent, "");
+});
+
+test("integration: successful filter change clears only the filter failure message (N-5)", () => {
+  const { context, elements } = createApp(seedStorage(MIXED));
+  const restore = failArticleCreation(context);
+  changeFilter(elements, "income");
+  restore();
+  assert.notEqual(elements["form-error"].textContent, "");
+
+  changeFilter(elements, "expenses");
+  assert.equal(elements["form-error"].textContent, "");
+  assert.equal(elements["form-error"].className.includes("hide"), true);
+
+  // An unrelated form error is not cleared by a later successful filter change.
+  elements["form-error"].textContent = "Unrelated save problem";
+  changeFilter(elements, "income");
+  assert.equal(elements["form-error"].textContent, "Unrelated save problem");
+});
+
+test("integration: select value restored by the browser is re-synced on load (N-1)", () => {
+  const { elements } = createApp(seedStorage(MIXED), "income");
+
+  // Init sync forces the select back to the rendered (All) state.
+  assert.equal(elements["history-filter"].value, "all");
+  assert.equal(itemTypes(elements).length, 4);
 });

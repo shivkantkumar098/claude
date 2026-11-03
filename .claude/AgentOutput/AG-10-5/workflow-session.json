@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "issue": {
+    "key": "AG-10",
+    "runId": "AG-10-5",
+    "title": "Filter transactions by type",
+    "branch": "feature/AG-10-5"
+  },
+  "currentStage": "Pull Request Preparation",
+  "workflowStatus": "In Progress",
+  "nextAction": "Executing authorized: commit, push, label, PR creation (in order). Never merge.",
+  "context": {
+    "keptThroughPlanning": true,
+    "implementationChoice": "Keep current context (user, 2026-11-03)"
+  },
+  "stages": {
+    "requirements": {
+      "status": "Passed",
+      "artifact": "requirements.md",
+      "approval": "Approved"
+    },
+    "architecture": {
+      "status": "Passed",
+      "artifact": "architecture.md",
+      "approval": "Approved (revision 2)"
+    },
+    "designReview": {
+      "status": "Passed",
+      "artifact": "design-review.md",
+      "approval": "Approved (incl. focused re-review)",
+      "note": "Re-review approved; original Stage 3 evidence unchanged."
+    },
+    "planning": {
+      "status": "Passed",
+      "artifact": "impl-plan.md",
+      "approval": "Approved"
+    },
+    "implementation": {
+      "status": "Passed",
+      "artifact": "implementation-notes.md",
+      "approval": "Approved"
+    },
+    "codeReview": {
+      "status": "Passed",
+      "artifact": "code-review.md",
+      "approval": "Approved"
+    },
+    "verification": {
+      "status": "Passed",
+      "artifact": "verification-report.md",
+      "approval": "Approved"
+    },
+    "pullRequest": {
+      "status": "In Progress",
+      "artifact": "pr-summary.md",
+      "approval": "Approved (draft)"
+    }
+  },
+  "approvalEvidence": [
+    {
+      "gate": "Start Stage 1 and create feature/AG-10-5",
+      "evidence": "User message in main session: 'first do step 1 then move to stage 1' (2026-11-03)"
+    },
+    {
+      "gate": "Stage 1 Requirements approval (finalize artifact only; Q3/Q4 defaults accepted)",
+      "evidence": "User message in main session, 2026-11-03: \"APPROVE, accept defaults for Q3 and Q4\". Not approval to commit/push or start Stage 2."
+    },
+    {
+      "gate": "Commit requirements artifacts and start Stage 2",
+      "evidence": "User message in main session, 2026-11-03: \"yes for both 2\""
+    },
+    {
+      "gate": "Stage 2 Architecture approval (artifact only; Q-A1..Q-A3 proposals accepted)",
+      "evidence": "User message in main session, 2026-11-03: \"APPROVE, accept proposals for Q-A1 to Q-A3\". Not approval to commit/push or start Stage 3."
+    },
+    {
+      "gate": "Commit architecture artifacts and start Stage 3",
+      "evidence": "User message in main session, 2026-11-03: \"yes for both 2\""
+    },
+    {
+      "gate": "Stage 3 Design Review approval (artifact only)",
+      "evidence": "User message in main session, 2026-11-03: \"approve\". Decisions 1-4 not individually answered; F-3/F-7/F-8-10 follow reviewer recommendations as UNCONFIRMED assumptions; decision 1 OPEN. Not approval to commit/push or start Stage 4."
+    },
+    {
+      "gate": "Decision 1: update architecture.md",
+      "evidence": "User message in main session, 2026-11-03: \"update architecture.md, then re-approve\". Prior Stage 2 approval no longer covers revised content."
+    },
+    {
+      "gate": "Architecture rev 2 + focused re-review approval; F-3/F-7 confirmed; N-1/2/3/5 as impl-plan constraints",
+      "evidence": "User message in main session, 2026-11-03: \"Approve al\" (truncated; orchestrator interpretation: approves architecture.md revision 2, the focused re-review, F-3 and F-7 as recommended, N-1/N-2/N-3/N-5 as impl-plan constraints, N-4 accepted with manual screen-reader check recorded as a Stage 7 not-run item; AR-7 formError wording deferred to planning). The message is ambiguous, so it is NOT authorization to commit, push, or start Stage 4."
+    },
+    {
+      "gate": "Commit Stage 3 artifacts and start Stage 4",
+      "evidence": "User message in main session, 2026-11-03: \"yes for both 2\""
+    },
+    {
+      "gate": "Stage 4 plan approval; AR-7 wording; context keep; batch T-1..T-11 dependency order; commit plan",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve 2.\"No trnasaction found\" 3.[keep current 4. depnedecy order 5 yes\". Orchestrator interpretation: plan approved incl. N-5 approach and markup inside .history-card; AR-7 message = \"No transaction found\" (typo \"trnasaction\" corrected); keep current context; implement T-1..T-11 in dependency order; commit impl-plan.md and workflow-session.json (no push)."
+    },
+    {
+      "gate": "Stage 5 approval, start Stage 6, commit implementation",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve stage 5 2. start stage 6 3.yes\". Interpretation: Stage 5 implementation approved; start Stage 6; commit source/test changes locally (no push)."
+    },
+    {
+      "gate": "Stage 6 approval, start Stage 7, commit code-review",
+      "evidence": "User message in main session, 2026-11-03: \"1. approve stage 6 2.yes 3. start stage 7 4. yes\". Interpretation: Stage 6 code review approved; CR-1 answer \"yes\" is ambiguous (keep vs new wording) so CR-1 stays OPEN/unresolved, wording unchanged, no source change, no other finding fixed; start Stage 7; commit code-review.md and workflow-session.json (no push)."
+    },
+    {
+      "gate": "Stage 7 approval; CR-1 accepted; start Stage 8 (prepare only); commit verification",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve of stage 7 2.keep the wording and accept the risk 3.start 4.yes\". Interpretation: Stage 7 verification approved; CR-1 resolved by keeping \"No transaction found\" and accepting the risk (no source change); start Stage 8 (prepare only); commit verification-report.md and workflow-session.json (no push, no PR)."
+    },
+    {
+      "gate": "Stage 8 PR draft approval; commit, push, label, PR creation authorized",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve 2.yes 3.yes 4.yes 5 yes\". Interpretation: PR draft approved; authorized in order: commit pr-summary.md and workflow-session.json; push feature/AG-10-5 (no force); create ai-generated label; create PR to main. Merge is never authorized."
+    }
+  ],
+  "agentRuns": [
+    {
+      "agent": "Requirement Analyst",
+      "stage": "Requirements Analysis",
+      "status": "Passed",
+      "startedAt": "2026-11-03T00:00:00Z",
+      "completedAt": null,
+      "inputs": [
+        "Jira AG-10"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/requirements.md"
+      ],
+      "checkpoint": "requirements.md approved by user with Q1/Q2 answers and Q3/Q4 defaults accepted. Not committed."
+    },
+    {
+      "agent": "Architecture Agent",
+      "stage": "Architecture Design",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        ".claude/AgentOutput/AG-10-5/requirements.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/architecture.md"
+      ],
+      "checkpoint": "architecture.md approved by user; Q-A1..Q-A3 resolved. Not committed."
+    },
+    {
+      "agent": "Design Review Agent",
+      "stage": "Design Review",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "requirements.md",
+        "architecture.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/design-review.md"
+      ],
+      "checkpoint": "design-review.md approved; decision 1 open; other dispositions unconfirmed. Not committed."
+    },
+    {
+      "agent": "Architecture Agent (revision)",
+      "stage": "Architecture Design",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "architecture.md",
+        "design-review.md"
+      ],
+      "outputs": [
+        "architecture.md"
+      ],
+      "checkpoint": "Revision 2 drafted; focused re-review done; awaiting user re-approval."
+    },
+    {
+      "agent": "Design Review Agent (focused re-review)",
+      "stage": "Design Review",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "architecture.md rev 2"
+      ],
+      "outputs": [
+        "design-review.md section 9"
+      ],
+      "checkpoint": "F-1..F-7 resolved; N-1..N-5 new, no blockers."
+    },
+    {
+      "agent": "Implementation Planner",
+      "stage": "Implementation Planning",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "requirements.md",
+        "architecture.md rev 2",
+        "design-review.md"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/impl-plan.md"
+      ],
+      "checkpoint": "T-1..T-11 drafted, no blockers; AR-7 placeholder FILTER_FAILURE_MESSAGE pending user wording."
+    },
+    {
+      "agent": "Implementation Agent",
+      "stage": "Implementation",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "impl-plan.md (approved)"
+      ],
+      "outputs": [
+        "index.html",
+        "styles.css",
+        "script.js",
+        "tests/app.test.cjs",
+        ".claude/AgentOutput/AG-10-5/implementation-notes.md"
+      ],
+      "checkpoint": "T-1..T-11 done; node --test: 29 pass, 0 fail (verified by orchestrator). T-11 manual checks NOT RUN."
+    },
+    {
+      "agent": "Code Review Agent",
+      "stage": "Code Review",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "commit e5c0417"
+      ],
+      "outputs": [
+        "code-review.md"
+      ],
+      "checkpoint": "0 Critical/High, 2 Medium, 5 Low; 29/29 tests pass."
+    },
+    {
+      "agent": "Verification Agent",
+      "stage": "Verification",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "commit e5c0417"
+      ],
+      "outputs": [
+        "verification-report.md"
+      ],
+      "checkpoint": "29/29 pass, node --check ok, mutation check 5/29 failed then restored (tree clean); manual screen-reader/browser/Firefox checks NOT RUN."
+    },
+    {
+      "agent": "PR Agent",
+      "stage": "Pull Request Preparation",
+      "status": "Awaiting Approval",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "all stage artifacts"
+      ],
+      "outputs": [
+        "pr-summary.md"
+      ],
+      "checkpoint": "Draft prepared; nothing pushed/created. 7 commits ahead of origin/main; ai-generated label absent on repo."
+    }
+  ],
+  "updatedAt": "2026-11-03T00:00:00Z",
+  "openQuestions": []
+}

@@ -127,6 +127,20 @@ h2 {
   color: #5c6678;
 }
 
+.history-filter {
+  margin: 0 0 1rem;
+}
+
+#filter-empty-state {
+  margin: 0;
+  color: #5c6678;
+}
+
+#filter-empty-state:empty {
+  margin: 0;
+  padding: 0;
+}
+
 .load-error {
   margin: 0 0 0.75rem;
   color: #a32232;

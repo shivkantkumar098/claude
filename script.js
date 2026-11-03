@@ -275,6 +275,9 @@ const formError = document.getElementById("form-error");
 const saveStatus = document.getElementById("save-status");
 const loadError = document.getElementById("load-error");
 const retryLoadButton = document.getElementById("retry-load");
+const historyFilterSelect = document.getElementById("history-filter");
+const historyFilterRow = document.getElementById("history-filter-row");
+const filterEmptyState = document.getElementById("filter-empty-state");
 const fieldErrorElements = {
   amount: document.getElementById("amount-error"),
   type: document.getElementById("type-error"),
@@ -286,7 +289,26 @@ const fieldInputs = {
   date: transactionDateInput,
 };
 
+const FILTER_FAILURE_MESSAGE = "No transaction found";
+
+const HISTORY_FILTERS = {
+  all: { type: null, emptyMessage: "" },
+  income: { type: "Money Received", emptyMessage: "No income transactions." },
+  expenses: { type: "Expense", emptyMessage: "No expense transactions." },
+};
+
+const isHistoryFilterKey = (key) =>
+  typeof key === "string" && Object.prototype.hasOwnProperty.call(HISTORY_FILTERS, key);
+
+const filterTransactions = (list, filterKey) => {
+  const filter = isHistoryFilterKey(filterKey) ? HISTORY_FILTERS[filterKey] : HISTORY_FILTERS.all;
+  return filter.type === null
+    ? [...list]
+    : list.filter((transaction) => transaction.type === filter.type);
+};
+
 let transactions = [];
+let activeHistoryFilter = "all";
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
@@ -384,17 +406,34 @@ const createTransactionElement = (transaction) => {
   return item;
 };
 
-const renderTransactions = (nextTransactions, balanceInPaise) => {
+const renderTransactions = (
+  nextTransactions,
+  balanceInPaise,
+  filterKey = activeHistoryFilter,
+) => {
+  // Build phase: everything that can throw runs before any DOM mutation.
+  const key = isHistoryFilterKey(filterKey) ? filterKey : "all";
+  const visibleTransactions = filterTransactions(nextTransactions, key);
   const list = document.createElement("div");
   list.className = "transaction-list";
-  nextTransactions.forEach((transaction) => {
+  visibleTransactions.forEach((transaction) => {
     list.append(createTransactionElement(transaction));
   });
+  const balanceText = formatINR(balanceInPaise);
+  const filterMessage =
+    nextTransactions.length === 0 || visibleTransactions.length > 0
+      ? ""
+      : HISTORY_FILTERS[key].emptyMessage;
 
+  // Assignment phase: plain property sets only.
   transactionHistory.replaceChildren(list);
-  balanceAmount.textContent = formatINR(balanceInPaise);
+  balanceAmount.textContent = balanceText;
   balanceAmount.hidden = false;
   emptyState.hidden = nextTransactions.length !== 0;
+  if (filterEmptyState) {
+    filterEmptyState.textContent = filterMessage;
+  }
+  showElement(historyFilterRow, true);
 };
 
 const renderLoadFailure = (error) => {
@@ -403,6 +442,10 @@ const renderLoadFailure = (error) => {
   balanceAmount.hidden = true;
   emptyState.hidden = true;
   transactionHistory.replaceChildren();
+  showElement(historyFilterRow, false);
+  if (filterEmptyState) {
+    filterEmptyState.textContent = "";
+  }
   loadError.textContent =
     error instanceof Error
       ? `${error.message} No empty history is being shown.`
@@ -525,6 +568,32 @@ if (transactionForm) {
 
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
+}
+
+if (historyFilterSelect) {
+  historyFilterSelect.addEventListener("change", () => {
+    if (!repositoryReady) {
+      return;
+    }
+
+    let candidate = historyFilterSelect.value;
+    if (!isHistoryFilterKey(candidate)) {
+      candidate = "all";
+      historyFilterSelect.value = "all";
+    }
+
+    try {
+      renderTransactions(transactions, calculateAvailableBalance(transactions), candidate);
+      activeHistoryFilter = candidate;
+      if (formError.textContent === FILTER_FAILURE_MESSAGE) {
+        setFormError("");
+      }
+    } catch (error) {
+      historyFilterSelect.value = activeHistoryFilter;
+      setFormError(FILTER_FAILURE_MESSAGE);
+    }
+  });
+  historyFilterSelect.value = activeHistoryFilter;
 }
 
 loadTransactions();

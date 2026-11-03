@@ -97,6 +97,15 @@
         <button class="retry-load hide" id="retry-load" type="button">
           Retry loading transactions
         </button>
+        <div class="field history-filter" id="history-filter-row">
+          <label for="history-filter">Show</label>
+          <select id="history-filter" autocomplete="off">
+            <option value="all" selected>All</option>
+            <option value="income">Income</option>
+            <option value="expenses">Expenses</option>
+          </select>
+        </div>
+        <p id="filter-empty-state" role="status"></p>
         <p id="empty-state" hidden>
           No transactions yet. Add one to get started.
         </p>
