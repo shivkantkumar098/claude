@@ -51,6 +51,23 @@ const calculateAvailableBalance = (transactions) =>
     return nextBalance;
   }, 10_000);
 
+const TRANSACTION_FILTERS = {
+  all: { type: null, emptyMessage: null },
+  income: { type: "Money Received", emptyMessage: "No income transactions found." },
+  expenses: { type: "Expense", emptyMessage: "No expense transactions found." },
+};
+
+const normalizeFilterKey = (key) =>
+  typeof key === "string" &&
+  Object.prototype.hasOwnProperty.call(TRANSACTION_FILTERS, key)
+    ? key
+    : "all";
+
+const filterTransactions = (list, filterKey) => {
+  const { type } = TRANSACTION_FILTERS[normalizeFilterKey(filterKey)];
+  return list.filter((transaction) => type === null || transaction.type === type);
+};
+
 const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -275,6 +292,12 @@ const formError = document.getElementById("form-error");
 const saveStatus = document.getElementById("save-status");
 const loadError = document.getElementById("load-error");
 const retryLoadButton = document.getElementById("retry-load");
+const historyFilter = document.getElementById("history-filter");
+const filterControls = {
+  all: document.getElementById("filter-all"),
+  income: document.getElementById("filter-income"),
+  expenses: document.getElementById("filter-expenses"),
+};
 const fieldErrorElements = {
   amount: document.getElementById("amount-error"),
   type: document.getElementById("type-error"),
@@ -290,6 +313,8 @@ let transactions = [];
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
+// Declared before any call to renderHistoryList (its default parameter reads it).
+let activeFilter = "all";
 
 const showElement = (element, visible) => {
   if (element) {
@@ -384,17 +409,34 @@ const createTransactionElement = (transaction) => {
   return item;
 };
 
-const renderTransactions = (nextTransactions, balanceInPaise) => {
-  const list = document.createElement("div");
-  list.className = "transaction-list";
-  nextTransactions.forEach((transaction) => {
-    list.append(createTransactionElement(transaction));
-  });
+// allTransactions must be the full stored list; the filter is applied here.
+const renderHistoryList = (allTransactions, filterKey = activeFilter) => {
+  const key = normalizeFilterKey(filterKey);
+  const visible = filterTransactions(allTransactions, key);
 
-  transactionHistory.replaceChildren(list);
+  // Build the replacement node before touching the DOM.
+  let node;
+  if (visible.length > 0 || allTransactions.length === 0) {
+    node = document.createElement("div");
+    node.className = "transaction-list";
+    visible.forEach((transaction) => {
+      node.append(createTransactionElement(transaction));
+    });
+  } else {
+    node = document.createElement("p");
+    node.className = "empty-message";
+    node.textContent = TRANSACTION_FILTERS[key].emptyMessage;
+  }
+
+  transactionHistory.replaceChildren(node);
+  emptyState.hidden = allTransactions.length !== 0;
+};
+
+// nextTransactions must be the full stored list (not a filtered subset).
+const renderTransactions = (nextTransactions, balanceInPaise) => {
+  renderHistoryList(nextTransactions);
   balanceAmount.textContent = formatINR(balanceInPaise);
   balanceAmount.hidden = false;
-  emptyState.hidden = nextTransactions.length !== 0;
 };
 
 const renderLoadFailure = (error) => {
@@ -403,6 +445,7 @@ const renderLoadFailure = (error) => {
   balanceAmount.hidden = true;
   emptyState.hidden = true;
   transactionHistory.replaceChildren();
+  showElement(historyFilter, false);
   loadError.textContent =
     error instanceof Error
       ? `${error.message} No empty history is being shown.`
@@ -427,6 +470,7 @@ const loadTransactions = () => {
     saveButton.disabled = false;
     showElement(loadError, false);
     showElement(retryLoadButton, false);
+    showElement(historyFilter, true);
   } catch (error) {
     renderLoadFailure(error);
   } finally {
@@ -525,6 +569,40 @@ if (transactionForm) {
 
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
+}
+
+const syncFilterControls = () => {
+  Object.entries(filterControls).forEach(([key, radio]) => {
+    if (radio) {
+      radio.checked = key === activeFilter;
+    }
+  });
+};
+
+const setActiveFilter = (filterKey) => {
+  const next = normalizeFilterKey(filterKey);
+  // Render with the candidate key first; commit the state only after it succeeds.
+  renderHistoryList(transactions, next);
+  activeFilter = next;
+  syncFilterControls();
+};
+
+Object.keys(filterControls).forEach((key) => {
+  const radio = filterControls[key];
+  if (radio) {
+    radio.addEventListener("change", () => {
+      if (!repositoryReady) {
+        return;
+      }
+      setActiveFilter(key);
+    });
+  }
+});
+
+syncFilterControls();
+// Re-project the in-memory selection if the browser restores form state late.
+if (typeof window.addEventListener === "function") {
+  window.addEventListener("pageshow", syncFilterControls);
 }
 
 loadTransactions();
