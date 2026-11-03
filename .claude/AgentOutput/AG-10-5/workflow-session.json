@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "issue": {
+    "key": "AG-10",
+    "runId": "AG-10-5",
+    "title": "Filter transactions by type",
+    "branch": "feature/AG-10-5"
+  },
+  "currentStage": "Requirements Analysis",
+  "workflowStatus": "In Progress",
+  "nextAction": "Stage 1 approved. Awaiting separate user authorization to commit requirements.md and explicit go-ahead for Stage 2 (Architecture). Do not start either.",
+  "context": {
+    "keptThroughPlanning": true,
+    "implementationChoice": "Pending"
+  },
+  "stages": {
+    "requirements": {
+      "status": "Passed",
+      "artifact": "requirements.md",
+      "approval": "Approved"
+    }
+  },
+  "approvalEvidence": [
+    {
+      "gate": "Start Stage 1 and create feature/AG-10-5",
+      "evidence": "User message in main session: 'first do step 1 then move to stage 1' (2026-11-03)"
+    },
+    {
+      "gate": "Stage 1 Requirements approval (finalize artifact only; Q3/Q4 defaults accepted)",
+      "evidence": "User message in main session, 2026-11-03: \"APPROVE, accept defaults for Q3 and Q4\". Not approval to commit/push or start Stage 2."
+    }
+  ],
+  "agentRuns": [
+    {
+      "agent": "Requirement Analyst",
+      "stage": "Requirements Analysis",
+      "status": "Passed",
+      "startedAt": "2026-11-03T00:00:00Z",
+      "completedAt": null,
+      "inputs": [
+        "Jira AG-10"
+      ],
+      "outputs": [
+        ".claude/AgentOutput/AG-10-5/requirements.md"
+      ],
+      "checkpoint": "requirements.md approved by user with Q1/Q2 answers and Q3/Q4 defaults accepted. Not committed."
+    }
+  ],
+  "updatedAt": "2026-11-03T00:00:00Z"
+}
