@@ -6,9 +6,9 @@
     "title": "Filter transactions by type",
     "branch": "feature/AG-10-5"
   },
-  "currentStage": "Verification",
+  "currentStage": "Pull Request Preparation",
   "workflowStatus": "In Progress",
-  "nextAction": "Verification agent running; then present verification-report.md for approval. No Stage 8.",
+  "nextAction": "pr-agent preparing pr-summary.md only (no push, no PR, no labels). Then ask user for separate authorization to push and create PR. Never merge.",
   "context": {
     "keptThroughPlanning": true,
     "implementationChoice": "Keep current context (user, 2026-11-03)"
@@ -46,8 +46,13 @@
       "approval": "Approved"
     },
     "verification": {
-      "status": "In Progress",
+      "status": "Passed",
       "artifact": "verification-report.md",
+      "approval": "Approved"
+    },
+    "pullRequest": {
+      "status": "In Progress",
+      "artifact": "pr-summary.md",
       "approval": "Pending"
     }
   },
@@ -99,6 +104,10 @@
     {
       "gate": "Stage 6 approval, start Stage 7, commit code-review",
       "evidence": "User message in main session, 2026-11-03: \"1. approve stage 6 2.yes 3. start stage 7 4. yes\". Interpretation: Stage 6 code review approved; CR-1 answer \"yes\" is ambiguous (keep vs new wording) so CR-1 stays OPEN/unresolved, wording unchanged, no source change, no other finding fixed; start Stage 7; commit code-review.md and workflow-session.json (no push)."
+    },
+    {
+      "gate": "Stage 7 approval; CR-1 accepted; start Stage 8 (prepare only); commit verification",
+      "evidence": "User message in main session, 2026-11-03: \"1.approve of stage 7 2.keep the wording and accept the risk 3.start 4.yes\". Interpretation: Stage 7 verification approved; CR-1 resolved by keeping \"No transaction found\" and accepting the risk (no source change); start Stage 8 (prepare only); commit verification-report.md and workflow-session.json (no push, no PR)."
     }
   ],
   "agentRuns": [
@@ -221,10 +230,22 @@
         "code-review.md"
       ],
       "checkpoint": "0 Critical/High, 2 Medium, 5 Low; 29/29 tests pass."
+    },
+    {
+      "agent": "Verification Agent",
+      "stage": "Verification",
+      "status": "Passed",
+      "startedAt": null,
+      "completedAt": null,
+      "inputs": [
+        "commit e5c0417"
+      ],
+      "outputs": [
+        "verification-report.md"
+      ],
+      "checkpoint": "29/29 pass, node --check ok, mutation check 5/29 failed then restored (tree clean); manual screen-reader/browser/Firefox checks NOT RUN."
     }
   ],
   "updatedAt": "2026-11-03T00:00:00Z",
-  "openQuestions": [
-    "CR-1: wording of filter-failure message \"No transaction found\" (keep+accept risk vs new wording) - unresolved"
-  ]
+  "openQuestions": []
 }

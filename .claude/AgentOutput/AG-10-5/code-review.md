@@ -2,7 +2,7 @@
 
 - Jira issue: AG-10, run ID AG-10-5, branch `feature/AG-10-5`
 - Stage: 6 Code Review
-- Status: **Approved** (user, 2026-11-03; see Approval section). CR-1 remains OPEN.
+- Status: **Approved** (user, 2026-11-03; see Approval section). CR-1 ACCEPTED by the user (see Approval section).
 - Reviewed: commit e5c0417 (local, not pushed); `git diff main...HEAD` for `index.html`, `styles.css`, `script.js`, `tests/app.test.cjs`. Untracked `docs/codemie/analytics/*fe4bb36f*.json` ignored as unrelated.
 - Evidence run: `node --test tests/` -> 29 tests, 29 pass, 0 fail, 0 skipped (executed by reviewer, read-only).
 
@@ -64,7 +64,7 @@ No unresolved Critical or High findings. Implementation meets AC-1..AC-4 on the 
 | Acceptance criteria | Pass (AC-1..AC-4) | AC-1: select with All/Income/Expenses, label "Show", markup test. AC-2/AC-3: integration tests for narrowing and return to All. AC-4: exact messages; original empty state only when total is 0; no filter message in load failure. |
 | FR/NFR | Pass; NFR-1 partly Not Verified | FR-1..FR-8 covered by tests; FR-8 test confirms filter retained on add. NFR-1 accessibility label/role present statically; announcement not verified (CR-2). |
 | Constraints N-1, N-2, N-3, N-5 | N-1/N-2/N-5 Pass; N-3 Not Verified | N-1: init sync plus `autocomplete="off"`, tested. N-2: build-then-swap in `renderTransactions`, failure tests assert identical DOM snapshot and restored select/filter. N-5: clears only own message, tested. N-3: CSS cascade checked statically only (CR-2). |
-| AR-7 | Open | CR-1. |
+| AR-7 | Resolved (CR-1 accepted by user) | CR-1. |
 | Security | Pass | No `innerHTML`; rows created via existing `createTransactionElement`; literal-text test for markup-like notes; no secrets in diff. |
 | Error handling | Pass | try/catch in handler restores select and previous filter; `renderLoadFailure` hides filter row and clears message; handler no-op when repository not ready. |
 | Test coverage / quality | Pass with notes | 14 new tests, 29/29 passing (executed). Failure paths are covered with real forced failures. Mutation check not executed (CR-5). |
@@ -82,3 +82,7 @@ Status: Draft / Awaiting Approval. No approval recorded.
 Status: Approved. Approval evidence: User message in main session, 2026-11-03: "1. approve stage 6 2.yes 3. start stage 7 4. yes". Interpretation: Stage 6 code review approved; CR-1 answer "yes" is ambiguous (keep vs new wording) so CR-1 stays OPEN/unresolved, wording unchanged, no source change, no other finding fixed; start Stage 7; commit code-review.md and workflow-session.json (no push).
 
 Dispositions: CR-1 OPEN (unresolved: neither accepted nor fixed; "No transaction found" unchanged). CR-2 carried to Stage 7 as NOT RUN manual item. CR-3..CR-7 not fixed (no user direction). Approval does not authorize push or Stage 8.
+
+### Update: CR-1 resolution
+
+CR-1 is ACCEPTED by the user: User message in main session, 2026-11-03: "1.approve of stage 7 2.keep the wording and accept the risk 3.start 4.yes". Interpretation: Stage 7 verification approved; CR-1 resolved by keeping "No transaction found" and accepting the risk (no source change); start Stage 8 (prepare only); commit verification-report.md and workflow-session.json (no push, no PR). Wording "No transaction found" unchanged; no source change.
