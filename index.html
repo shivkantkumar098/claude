@@ -7,13 +7,13 @@
       name="description"
       content="Record money received and expenses, and keep track of your available balance."
     />
-    <title>Vidyarthi Khataa — Transactions</title>
+    <title>Vidyarthi Khaata — Transactions</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="wrapper">
       <header class="page-header">
-        <h1>Vidyarthi Khataa</h1>
+        <h1>Vidyarthi Khaata</h1>
         <p>Keep track of money received and expenses.</p>
       </header>
 
@@ -93,13 +93,42 @@
 
       <section class="history-card" aria-labelledby="history-heading">
         <h2 id="history-heading">Transaction history</h2>
+        <div
+          class="segmented-control"
+          role="group"
+          aria-label="Filter transactions"
+          id="transaction-filter"
+        >
+          <button
+            type="button"
+            data-filter="all"
+            class="segmented-option is-selected"
+            aria-pressed="true"
+          >
+            All
+          </button>
+          <button
+            type="button"
+            data-filter="income"
+            class="segmented-option"
+            aria-pressed="false"
+          >
+            Income
+          </button>
+          <button
+            type="button"
+            data-filter="expense"
+            class="segmented-option"
+            aria-pressed="false"
+          >
+            Expense
+          </button>
+        </div>
         <p id="load-error" class="load-error hide" role="alert"></p>
         <button class="retry-load hide" id="retry-load" type="button">
           Retry loading transactions
         </button>
-        <p id="empty-state" hidden>
-          No transactions yet. Add one to get started.
-        </p>
+        <p id="empty-state" hidden>No transactions yet.</p>
         <div id="transaction-history" aria-live="polite"></div>
       </section>
     </main>

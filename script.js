@@ -1,7 +1,77 @@
 const TRANSACTION_STORAGE_KEY = "transactions";
 const TRANSACTION_SCHEMA_VERSION = 1;
 const TRANSACTION_TYPES = ["Expense", "Money Received"];
-const AMOUNT_PATTERN = /^(?:\d+(?:\.\d{1,2})?|\.\d{1,2})$/;
+
+const TRANSACTION_FILTER_TYPES = Object.freeze({
+  ALL: "all",
+  INCOME: "income",
+  EXPENSE: "expense",
+});
+
+const DEFAULT_TRANSACTION_FILTER = TRANSACTION_FILTER_TYPES.ALL;
+
+const getTransactionFilterKind = (transaction) => {
+  if (!transaction || typeof transaction !== "object") {
+    return "other";
+  }
+
+  switch (transaction.type) {
+    case "Money Received":
+      return TRANSACTION_FILTER_TYPES.INCOME;
+    case "Expense":
+      return TRANSACTION_FILTER_TYPES.EXPENSE;
+    default:
+      return "other";
+  }
+};
+
+const hasUnknownTransactionTypes = (transactions) => {
+  if (!Array.isArray(transactions)) {
+    return false;
+  }
+
+  return transactions.some(
+    (transaction) => getTransactionFilterKind(transaction) === "other"
+  );
+};
+
+const isTransactionFilterType = (value) =>
+  Object.values(TRANSACTION_FILTER_TYPES).includes(value);
+
+const normalizeTransactionFilter = (value) =>
+  isTransactionFilterType(value) ? value : DEFAULT_TRANSACTION_FILTER;
+
+const filterTransactionsByType = (transactions, selectedType) => {
+  if (!Array.isArray(transactions)) {
+    return [];
+  }
+
+  if (selectedType === TRANSACTION_FILTER_TYPES.ALL) {
+    return transactions;
+  }
+
+  return transactions.filter(
+    (transaction) => getTransactionFilterKind(transaction) === selectedType
+  );
+};
+
+const getFilteredEmptyStateMessage = ({ selectedType, totalCount }) => {
+  if (totalCount === 0) {
+    return "No transactions yet.";
+  }
+
+  if (selectedType === TRANSACTION_FILTER_TYPES.INCOME) {
+    return "No income transactions found.";
+  }
+
+  if (selectedType === TRANSACTION_FILTER_TYPES.EXPENSE) {
+    return "No expense transactions found.";
+  }
+
+  return "";
+};
+
+const AMOUNT_PATTERN = /^(?:\\d+(?:\\.\\d{1,2})?|\\.\\d{1,2})$/;
 
 const parseAmountToPaise = (value) => {
   const normalizedValue = String(value).trim();
@@ -63,12 +133,12 @@ const formatTransactionDate = (dateString) => {
   if (!isValidTransactionDate(dateString)) {
     throw new TypeError("The transaction date is invalid.");
   }
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(dateString);
   return `${match[3]}/${match[2]}/${match[1]}`;
 };
 
 const isValidTransactionDate = (value) => {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
     return false;
   }
 
@@ -88,8 +158,13 @@ const isValidTransactionDate = (value) => {
     31,
   ];
 
-  return year > 0 && month >= 1 && month <= 12 && day >= 1 &&
-    day <= daysInMonth[month - 1];
+  return (
+    year > 0 &&
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= daysInMonth[month - 1]
+  );
 };
 
 const validateTransaction = ({ amount, type, date }) => {
@@ -97,7 +172,8 @@ const validateTransaction = ({ amount, type, date }) => {
   const amountInPaise = parseAmountToPaise(amount);
 
   if (amountInPaise === null) {
-    errors.amount = "Enter an amount greater than zero with no more than two decimal places.";
+    errors.amount =
+      "Enter an amount greater than zero with no more than two decimal places.";
   }
   if (!TRANSACTION_TYPES.includes(type)) {
     errors.type = "Choose Expense or Money Received.";
@@ -173,7 +249,7 @@ const readLegacyExpenses = (storage) => {
       amountInPaise === null
     ) {
       throw new Error(
-        `Saved legacy expense ${index + 1} is invalid. No data was changed.`,
+        `Saved legacy expense ${index + 1} is invalid. No data was changed.`
       );
     }
 
@@ -240,7 +316,7 @@ const transactionRepository = {
     } catch (error) {
       throw createStorageError(
         "Transactions could not be saved. Please try again.",
-        error,
+        error
       );
     }
   },
@@ -275,6 +351,12 @@ const formError = document.getElementById("form-error");
 const saveStatus = document.getElementById("save-status");
 const loadError = document.getElementById("load-error");
 const retryLoadButton = document.getElementById("retry-load");
+
+const typeFilterContainer = document.getElementById("transaction-filter");
+const typeFilterButtons = typeFilterContainer
+  ? Array.from(typeFilterContainer.querySelectorAll("button[data-filter]"))
+  : [];
+
 const fieldErrorElements = {
   amount: document.getElementById("amount-error"),
   type: document.getElementById("type-error"),
@@ -290,11 +372,68 @@ let transactions = [];
 let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
+let selectedTransactionFilter = DEFAULT_TRANSACTION_FILTER;
+let allOnlyMode = false;
 
 const showElement = (element, visible) => {
   if (element) {
     element.classList.toggle("hide", !visible);
   }
+};
+
+const updateAllOnlyMode = (nextTransactions) => {
+  allOnlyMode = hasUnknownTransactionTypes(nextTransactions);
+
+  if (allOnlyMode) {
+    selectedTransactionFilter = TRANSACTION_FILTER_TYPES.ALL;
+  }
+
+  setActiveFilterButton(selectedTransactionFilter);
+};
+
+const setActiveFilterButton = (selectedType) => {
+  const normalizedType = normalizeTransactionFilter(selectedType);
+  selectedTransactionFilter = normalizedType;
+
+  if (!typeFilterContainer) {
+    return;
+  }
+
+  typeFilterButtons.forEach((button) => {
+    const buttonType = normalizeTransactionFilter(button.dataset.filter);
+    const isActive = buttonType === normalizedType;
+
+    button.classList.toggle("is-selected", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+
+    // Option B: keep buttons visually enabled but ignore clicks in All-only mode.
+    if (allOnlyMode && buttonType !== TRANSACTION_FILTER_TYPES.ALL) {
+      button.setAttribute("aria-disabled", "true");
+    } else {
+      button.removeAttribute("aria-disabled");
+    }
+  });
+};
+
+const setTransactionFilter = (nextFilter) => {
+  const normalizedNextFilter = normalizeTransactionFilter(nextFilter);
+
+  if (allOnlyMode && normalizedNextFilter !== TRANSACTION_FILTER_TYPES.ALL) {
+    return;
+  }
+
+  setActiveFilterButton(normalizedNextFilter);
+
+  if (!repositoryReady) {
+    return;
+  }
+
+  const visibleTransactions = filterTransactionsByType(
+    transactions,
+    selectedTransactionFilter
+  );
+  const updatedBalance = calculateAvailableBalance(transactions);
+  renderTransactions(visibleTransactions, updatedBalance);
 };
 
 const clearFieldErrors = () => {
@@ -394,6 +533,13 @@ const renderTransactions = (nextTransactions, balanceInPaise) => {
   transactionHistory.replaceChildren(list);
   balanceAmount.textContent = formatINR(balanceInPaise);
   balanceAmount.hidden = false;
+
+  const emptyMessage = getFilteredEmptyStateMessage({
+    selectedType: selectedTransactionFilter,
+    totalCount: transactions.length,
+  });
+
+  emptyState.textContent = emptyMessage;
   emptyState.hidden = nextTransactions.length !== 0;
 };
 
@@ -421,12 +567,20 @@ const loadTransactions = () => {
   try {
     const loadedTransactions = transactionRepository.load();
     const loadedBalance = calculateAvailableBalance(loadedTransactions);
-    renderTransactions(loadedTransactions, loadedBalance);
+
     transactions = loadedTransactions;
+    updateAllOnlyMode(transactions);
     repositoryReady = true;
     saveButton.disabled = false;
     showElement(loadError, false);
     showElement(retryLoadButton, false);
+
+    const visibleTransactions = filterTransactionsByType(
+      loadedTransactions,
+      selectedTransactionFilter
+    );
+
+    renderTransactions(visibleTransactions, loadedBalance);
   } catch (error) {
     renderLoadFailure(error);
   } finally {
@@ -445,6 +599,13 @@ const clearSubmissionFeedback = () => {
   saveStatus.textContent = "";
   showElement(saveStatus, false);
 };
+
+typeFilterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const nextType = normalizeTransactionFilter(button.dataset.filter);
+    setTransactionFilter(nextType);
+  });
+});
 
 if (transactionForm) {
   transactionForm.addEventListener("submit", (event) => {
@@ -485,7 +646,7 @@ if (transactionForm) {
       setFormError(
         error instanceof Error
           ? error.message
-          : "The transaction could not be prepared. Please retry.",
+          : "The transaction could not be prepared. Please retry."
       );
       return;
     }
@@ -499,21 +660,26 @@ if (transactionForm) {
         setFormError(
           error instanceof Error
             ? error.message
-            : "Transactions could not be saved. Please try again.",
+            : "Transactions could not be saved. Please try again."
         );
         return;
       }
 
       transactions = updatedTransactions;
+      updateAllOnlyMode(transactions);
       transactionForm.reset();
       transactionDateInput.value = getLocalDateString();
       try {
-        renderTransactions(transactions, updatedBalance);
+        const visibleTransactions = filterTransactionsByType(
+          transactions,
+          selectedTransactionFilter
+        );
+        renderTransactions(visibleTransactions, updatedBalance);
         saveStatus.textContent = "Transaction added.";
         showElement(saveStatus, true);
       } catch (error) {
         setFormError(
-          "The transaction was saved, but the history could not refresh. Reload the page to view it.",
+          "The transaction was saved, but the history could not refresh. Reload the page to view it."
         );
       }
     } finally {
@@ -526,5 +692,8 @@ if (transactionForm) {
 if (retryLoadButton) {
   retryLoadButton.addEventListener("click", loadTransactions);
 }
+
+// Reset to ALL on each visit (no persistence)
+setTransactionFilter(DEFAULT_TRANSACTION_FILTER);
 
 loadTransactions();

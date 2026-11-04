@@ -32,6 +32,7 @@ class FakeElement {
     this.value = "";
     this.disabled = false;
     this.hidden = false;
+    this.dataset = {};
     this.classList = {
       toggle: (name, force) => {
         const names = new Set(this.className.split(/\s+/).filter(Boolean));
@@ -87,8 +88,20 @@ class FakeElement {
     }
   }
 
+  querySelectorAll(selector) {
+    if (selector !== "button[data-filter]") {
+      return [];
+    }
+
+    return this.children.filter(
+      (child) => child && child.tagName === "button" && child.dataset.filter,
+    );
+  }
+
   get innerHTML() {
-    return this.children.map((child) => child.innerHTML || child.textContent).join("");
+    return this.children
+      .map((child) => child.innerHTML || child.textContent)
+      .join("");
   }
 }
 
@@ -129,6 +142,7 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -136,6 +150,14 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
+
+  const filterAll = new FakeElement("button");
+  filterAll.dataset.filter = "all";
+  const filterIncome = new FakeElement("button");
+  filterIncome.dataset.filter = "income";
+  const filterExpense = new FakeElement("button");
+  filterExpense.dataset.filter = "expense";
+  elements["transaction-filter"].append(filterAll, filterIncome, filterExpense);
 
   let nextId = 1;
   const window = {
@@ -158,13 +180,21 @@ const createApp = (storage = createStorage()) => {
       formatTransactionDate,
       isValidTransactionDate,
       validateTransaction,
-      transactionRepository
+      transactionRepository,
+      TRANSACTION_FILTER_TYPES,
+      filterTransactionsByType,
+      getFilteredEmptyStateMessage
     };`,
     context,
     { filename: "script.js" },
   );
 
-  return { context, elements, storage };
+  return {
+    context,
+    elements,
+    storage,
+    filterButtons: { filterAll, filterIncome, filterExpense },
+  };
 };
 
 const transactionsFrom = (storage) =>
@@ -188,15 +218,66 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-filter",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
+
+  assert.match(htmlSource, /data-filter="all"/);
+  assert.match(htmlSource, /data-filter="income"/);
+  assert.match(htmlSource, /data-filter="expense"/);
 
   assert.match(htmlSource, /<form\b[^>]*id="transaction-form"/);
   assert.match(htmlSource, /<button\b[^>]*id="save-transaction"[^>]*type="submit"/);
   assert.match(htmlSource, /<link\b[^>]*href="styles\.css"/);
   assert.match(htmlSource, /<script\b[^>]*src="script\.js"/);
   assert.doesNotMatch(htmlSource, /id="(?:budget|expense-title|edit|delete)[^"]*"/i);
+});
+
+test("unit: transaction type filter maps known types and excludes unknown types", () => {
+  const { context } = createApp();
+  const { TRANSACTION_FILTER_TYPES, filterTransactionsByType } = context.__appTest;
+
+  const data = [
+    { id: "1", type: "Expense" },
+    { id: "2", type: "Money Received" },
+    { id: "3", type: "Transfer" },
+  ];
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.ALL).map(({ id }) => id),
+    ["1", "2", "3"],
+  );
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.INCOME).map(({ id }) => id),
+    ["2"],
+  );
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.EXPENSE).map(({ id }) => id),
+    ["1"],
+  );
+});
+
+test("unit: filtered empty state messages follow AG-10 placeholders", () => {
+  const { context } = createApp();
+  const { TRANSACTION_FILTER_TYPES, getFilteredEmptyStateMessage } = context.__appTest;
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.ALL, totalCount: 0 }),
+    "No transactions yet.",
+  );
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.INCOME, totalCount: 1 }),
+    "No income transactions found.",
+  );
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.EXPENSE, totalCount: 1 }),
+    "No expense transactions found.",
+  );
 });
 
 test("unit: amount parsing accepts positive INR cents and rejects invalid precision", () => {
@@ -293,10 +374,13 @@ test("unit: legacy migration maps whole and fractional rupees without rounding",
     ],
   );
   assert.equal(storage.values.get("budget"), "9999");
-  assert.equal(storage.values.get("expenses"), JSON.stringify([
-    { title: "Whole", amount: 12 },
-    { title: "Paise", amount: 12.34 },
-  ]));
+  assert.equal(
+    storage.values.get("expenses"),
+    JSON.stringify([
+      { title: "Whole", amount: 12 },
+      { title: "Paise", amount: 12.34 },
+    ])
+  );
   assert.equal(context.__appTest.transactionRepository.load().length, 2);
 });
 
@@ -321,6 +405,7 @@ test("integration: empty app loads; saving transaction persists, renders, and up
   assert.equal(elements["balance-amount"].textContent, "₹100.00");
   assert.equal(elements["balance-amount"].hidden, false);
   assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements["empty-state"].textContent, "No transactions yet.");
   assert.equal(elements["save-transaction"].disabled, false);
 
   elements["transaction-amount"].value = "12.34";
@@ -338,6 +423,83 @@ test("integration: empty app loads; saving transaction persists, renders, and up
   assert.equal(history.includes("₹12.34"), true);
   assert.equal(history.includes("14/10/2026"), true);
   assert.equal(history.includes("Lunch"), true);
+});
+
+test("integration: selecting type filters updates visible history and empty state", () => {
+  const storage = createStorage();
+  const { elements, filterButtons } = createApp(storage);
+
+  elements["transaction-amount"].value = "10";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-type"].value = "Money Received";
+  elements["transaction-form"].dispatch("submit");
+
+  elements["transaction-amount"].value = "5";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-type"].value = "Expense";
+  elements["transaction-form"].dispatch("submit");
+
+  filterButtons.filterIncome.dispatch("click");
+  assert.equal(
+    collectText(elements["transaction-history"]).includes("Money Received"),
+    true
+  );
+  assert.equal(collectText(elements["transaction-history"]).includes("Expense"), false);
+
+  filterButtons.filterExpense.dispatch("click");
+  assert.equal(collectText(elements["transaction-history"]).includes("Expense"), true);
+
+  // Empty state for income when no income exists
+  const onlyExpenseStorage = createStorage({
+    transactions: JSON.stringify({
+      schemaVersion: 1,
+      transactions: [
+        {
+          id: "transaction-1",
+          type: "Expense",
+          amountInPaise: 500,
+          date: "2026-10-14",
+        },
+      ],
+    }),
+  });
+  const app2 = createApp(onlyExpenseStorage);
+  app2.filterButtons.filterIncome.dispatch("click");
+  assert.equal(app2.elements["empty-state"].hidden, false);
+  assert.equal(
+    app2.elements["empty-state"].textContent,
+    "No income transactions found."
+  );
+});
+
+test("integration: unknown types force All-only mode and ignore other filters", () => {
+  const storage = createStorage({
+    transactions: JSON.stringify({
+      schemaVersion: 1,
+      transactions: [
+        {
+          id: "transaction-1",
+          type: "Transfer",
+          amountInPaise: 100,
+          date: "2026-10-14",
+        },
+      ],
+    }),
+  });
+  const app = createApp(storage);
+
+  // Attempt to select income should be ignored.
+  app.filterButtons.filterIncome.dispatch("click");
+  assert.equal(app.elements["empty-state"].hidden, true);
+  assert.equal(
+    collectText(app.elements["transaction-history"]).includes("Transfer"),
+    true,
+  );
+
+  // aria-disabled should be applied for non-All options.
+  assert.equal(app.filterButtons.filterIncome.attributes["aria-disabled"], "true");
+  assert.equal(app.filterButtons.filterExpense.attributes["aria-disabled"], "true");
+  assert.equal(app.filterButtons.filterAll.attributes["aria-disabled"], undefined);
 });
 
 test("integration: invalid submission shows field feedback and does not persist", () => {
@@ -401,7 +563,7 @@ test("integration: failed save preserves form, state, and no-success feedback", 
   const initialEnvelope = JSON.stringify({ schemaVersion: 1, transactions: [] });
   const storage = createStorage(
     { transactions: initialEnvelope },
-    { failWrites: true },
+    { failWrites: true }
   );
   const { elements } = createApp(storage);
   elements["transaction-amount"].value = "5.25";
