@@ -32,6 +32,7 @@ class FakeElement {
     this.value = "";
     this.disabled = false;
     this.hidden = false;
+    this.dataset = {};
     this.classList = {
       toggle: (name, force) => {
         const names = new Set(this.className.split(/\s+/).filter(Boolean));
@@ -129,6 +130,10 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-type-filter",
+    "filter-all",
+    "filter-income",
+    "filter-expense",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -136,6 +141,9 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
+  elements["filter-all"].dataset.type = "all";
+  elements["filter-income"].dataset.type = "income";
+  elements["filter-expense"].dataset.type = "expense";
 
   let nextId = 1;
   const window = {
@@ -158,7 +166,10 @@ const createApp = (storage = createStorage()) => {
       formatTransactionDate,
       isValidTransactionDate,
       validateTransaction,
-      transactionRepository
+      transactionRepository,
+      TRANSACTION_FILTER_TYPES,
+      filterTransactionsByType,
+      getFilteredEmptyStateMessage
     };`,
     context,
     { filename: "script.js" },
@@ -188,6 +199,10 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
+    "transaction-type-filter",
+    "filter-all",
+    "filter-income",
+    "filter-expense",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
@@ -197,6 +212,52 @@ test("integration: index.html exposes every required app control and local asset
   assert.match(htmlSource, /<link\b[^>]*href="styles\.css"/);
   assert.match(htmlSource, /<script\b[^>]*src="script\.js"/);
   assert.doesNotMatch(htmlSource, /id="(?:budget|expense-title|edit|delete)[^"]*"/i);
+});
+
+test("unit: transaction type filter maps known types and excludes unknown types", () => {
+  const { context } = createApp();
+  const { TRANSACTION_FILTER_TYPES, filterTransactionsByType } = context.__appTest;
+
+  const data = [
+    { id: "1", type: "Expense" },
+    { id: "2", type: "Money Received" },
+    { id: "3", type: "Transfer" },
+  ];
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.ALL).map(({ id }) => id),
+    ["1", "2", "3"],
+  );
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.INCOME).map(({ id }) => id),
+    ["2"],
+  );
+
+  assert.deepEqual(
+    filterTransactionsByType(data, TRANSACTION_FILTER_TYPES.EXPENSE).map(({ id }) => id),
+    ["1"],
+  );
+});
+
+test("unit: filtered empty state messages follow AG-10 placeholders", () => {
+  const { context } = createApp();
+  const { TRANSACTION_FILTER_TYPES, getFilteredEmptyStateMessage } = context.__appTest;
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.ALL, totalCount: 0 }),
+    "No transactions yet.",
+  );
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.INCOME, totalCount: 1 }),
+    "No income transactions found.",
+  );
+
+  assert.equal(
+    getFilteredEmptyStateMessage({ selectedType: TRANSACTION_FILTER_TYPES.EXPENSE, totalCount: 1 }),
+    "No expense transactions found.",
+  );
 });
 
 test("unit: amount parsing accepts positive INR cents and rejects invalid precision", () => {
@@ -321,6 +382,7 @@ test("integration: empty app loads; saving transaction persists, renders, and up
   assert.equal(elements["balance-amount"].textContent, "₹100.00");
   assert.equal(elements["balance-amount"].hidden, false);
   assert.equal(elements["empty-state"].hidden, false);
+  assert.equal(elements["empty-state"].textContent, "No transactions yet.");
   assert.equal(elements["save-transaction"].disabled, false);
 
   elements["transaction-amount"].value = "12.34";
@@ -338,6 +400,49 @@ test("integration: empty app loads; saving transaction persists, renders, and up
   assert.equal(history.includes("₹12.34"), true);
   assert.equal(history.includes("14/10/2026"), true);
   assert.equal(history.includes("Lunch"), true);
+});
+
+test("integration: selecting type filters updates visible history and empty state", () => {
+  const storage = createStorage();
+  const { elements } = createApp(storage);
+
+  elements["transaction-amount"].value = "10";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-type"].value = "Money Received";
+  elements["transaction-form"].dispatch("submit");
+
+  elements["transaction-amount"].value = "5";
+  elements["transaction-date"].value = "2026-10-14";
+  elements["transaction-type"].value = "Expense";
+  elements["transaction-form"].dispatch("submit");
+
+  elements["filter-income"].dispatch("click");
+  assert.equal(collectText(elements["transaction-history"]).includes("Money Received"), true);
+  assert.equal(collectText(elements["transaction-history"]).includes("Expense"), false);
+
+  elements["filter-expense"].dispatch("click");
+  assert.equal(collectText(elements["transaction-history"]).includes("Expense"), true);
+
+  // Empty state for income when no income exists
+  elements["filter-all"].dispatch("click");
+  // Remove income by resetting storage to only expense
+  const onlyExpenseStorage = createStorage({
+    transactions: JSON.stringify({
+      schemaVersion: 1,
+      transactions: [
+        {
+          id: "transaction-1",
+          type: "Expense",
+          amountInPaise: 500,
+          date: "2026-10-14",
+        },
+      ],
+    }),
+  });
+  const app2 = createApp(onlyExpenseStorage);
+  app2.elements["filter-income"].dispatch("click");
+  assert.equal(app2.elements["empty-state"].hidden, false);
+  assert.equal(app2.elements["empty-state"].textContent, "No income transactions found.");
 });
 
 test("integration: invalid submission shows field feedback and does not persist", () => {
