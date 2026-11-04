@@ -25,6 +25,16 @@ const getTransactionFilterKind = (transaction) => {
   }
 };
 
+const hasUnknownTransactionTypes = (transactions) => {
+  if (!Array.isArray(transactions)) {
+    return false;
+  }
+
+  return transactions.some(
+    (transaction) => getTransactionFilterKind(transaction) === "other"
+  );
+};
+
 const isTransactionFilterType = (value) =>
   Object.values(TRANSACTION_FILTER_TYPES).includes(value);
 
@@ -363,11 +373,22 @@ let repositoryReady = false;
 let isSaving = false;
 let isLoading = false;
 let selectedTransactionFilter = DEFAULT_TRANSACTION_FILTER;
+let allOnlyMode = false;
 
 const showElement = (element, visible) => {
   if (element) {
     element.classList.toggle("hide", !visible);
   }
+};
+
+const updateAllOnlyMode = (nextTransactions) => {
+  allOnlyMode = hasUnknownTransactionTypes(nextTransactions);
+
+  if (allOnlyMode) {
+    selectedTransactionFilter = TRANSACTION_FILTER_TYPES.ALL;
+  }
+
+  setActiveFilterButton(selectedTransactionFilter);
 };
 
 const setActiveFilterButton = (selectedType) => {
@@ -381,13 +402,27 @@ const setActiveFilterButton = (selectedType) => {
   typeFilterButtons.forEach((button) => {
     const buttonType = normalizeTransactionFilter(button.dataset.filter);
     const isActive = buttonType === normalizedType;
+
     button.classList.toggle("is-selected", isActive);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
+
+    // Option B: keep buttons visually enabled but ignore clicks in All-only mode.
+    if (allOnlyMode && buttonType !== TRANSACTION_FILTER_TYPES.ALL) {
+      button.setAttribute("aria-disabled", "true");
+    } else {
+      button.removeAttribute("aria-disabled");
+    }
   });
 };
 
 const setTransactionFilter = (nextFilter) => {
-  setActiveFilterButton(nextFilter);
+  const normalizedNextFilter = normalizeTransactionFilter(nextFilter);
+
+  if (allOnlyMode && normalizedNextFilter !== TRANSACTION_FILTER_TYPES.ALL) {
+    return;
+  }
+
+  setActiveFilterButton(normalizedNextFilter);
 
   if (!repositoryReady) {
     return;
@@ -504,10 +539,7 @@ const renderTransactions = (nextTransactions, balanceInPaise) => {
     totalCount: transactions.length,
   });
 
-  if (emptyMessage) {
-    emptyState.textContent = emptyMessage;
-  }
-
+  emptyState.textContent = emptyMessage;
   emptyState.hidden = nextTransactions.length !== 0;
 };
 
@@ -537,6 +569,7 @@ const loadTransactions = () => {
     const loadedBalance = calculateAvailableBalance(loadedTransactions);
 
     transactions = loadedTransactions;
+    updateAllOnlyMode(transactions);
     repositoryReady = true;
     saveButton.disabled = false;
     showElement(loadError, false);
@@ -633,6 +666,7 @@ if (transactionForm) {
       }
 
       transactions = updatedTransactions;
+      updateAllOnlyMode(transactions);
       transactionForm.reset();
       transactionDateInput.value = getLocalDateString();
       try {

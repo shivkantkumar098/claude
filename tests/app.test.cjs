@@ -99,7 +99,9 @@ class FakeElement {
   }
 
   get innerHTML() {
-    return this.children.map((child) => child.innerHTML || child.textContent).join("");
+    return this.children
+      .map((child) => child.innerHTML || child.textContent)
+      .join("");
   }
 }
 
@@ -187,7 +189,12 @@ const createApp = (storage = createStorage()) => {
     { filename: "script.js" },
   );
 
-  return { context, elements, storage, filterButtons: { filterAll, filterIncome, filterExpense } };
+  return {
+    context,
+    elements,
+    storage,
+    filterButtons: { filterAll, filterIncome, filterExpense },
+  };
 };
 
 const transactionsFrom = (storage) =>
@@ -463,6 +470,36 @@ test("integration: selecting type filters updates visible history and empty stat
     app2.elements["empty-state"].textContent,
     "No income transactions found."
   );
+});
+
+test("integration: unknown types force All-only mode and ignore other filters", () => {
+  const storage = createStorage({
+    transactions: JSON.stringify({
+      schemaVersion: 1,
+      transactions: [
+        {
+          id: "transaction-1",
+          type: "Transfer",
+          amountInPaise: 100,
+          date: "2026-10-14",
+        },
+      ],
+    }),
+  });
+  const app = createApp(storage);
+
+  // Attempt to select income should be ignored.
+  app.filterButtons.filterIncome.dispatch("click");
+  assert.equal(app.elements["empty-state"].hidden, true);
+  assert.equal(
+    collectText(app.elements["transaction-history"]).includes("Transfer"),
+    true,
+  );
+
+  // aria-disabled should be applied for non-All options.
+  assert.equal(app.filterButtons.filterIncome.attributes["aria-disabled"], "true");
+  assert.equal(app.filterButtons.filterExpense.attributes["aria-disabled"], "true");
+  assert.equal(app.filterButtons.filterAll.attributes["aria-disabled"], undefined);
 });
 
 test("integration: invalid submission shows field feedback and does not persist", () => {
