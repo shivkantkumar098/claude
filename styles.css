@@ -9,28 +9,28 @@ body {
   font-family: Arial, sans-serif;
 }
 
-wrapper {
+.wrapper {
   width: min(92%, 46rem);
   margin: 2rem auto;
 }
 
-page-header {
+.page-header {
   margin-bottom: 1.5rem;
 }
 
-page-header h1 {
+.page-header h1 {
   margin: 0 0 0.4rem;
   color: #263f72;
 }
 
-page-header p {
+.page-header p {
   margin: 0;
   color: #5c6678;
 }
 
-balance-card,
-transaction-form-card,
-history-card {
+.balance-card,
+.transaction-form-card,
+.history-card {
   margin-bottom: 1.25rem;
   padding: 1.4rem;
   border-radius: 0.75rem;
@@ -43,18 +43,18 @@ h2 {
   font-size: 1.25rem;
 }
 
-balance-card {
+.balance-card {
   background: #263f72;
   color: #fff;
 }
 
-balance-card h2 {
+.balance-card h2 {
   margin-bottom: 0.4rem;
   font-size: 1rem;
   font-weight: 500;
 }
 
-balance-value {
+.balance-value {
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
@@ -195,15 +195,21 @@ balance-value {
   color: #243047;
   font: inherit;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .segmented-option:not(:first-child) {
-  border-left: 1px solid #ee0e6ef;
+  border-left: 1px solid #e0e6ef;
 }
 
 .segmented-option.is-selected {
   background: #315ca8;
   color: #fff;
+}
+
+.segmented-option:focus-visible {
+  outline: 2px solid rgba(49, 92, 168, 0.4);
+  outline-offset: -2px;
 }
 
 .hide {

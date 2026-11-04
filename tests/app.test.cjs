@@ -88,6 +88,16 @@ class FakeElement {
     }
   }
 
+  querySelectorAll(selector) {
+    if (selector !== "button[data-filter]") {
+      return [];
+    }
+
+    return this.children.filter(
+      (child) => child && child.tagName === "button" && child.dataset.filter,
+    );
+  }
+
   get innerHTML() {
     return this.children.map((child) => child.innerHTML || child.textContent).join("");
   }
@@ -130,10 +140,7 @@ const createApp = (storage = createStorage()) => {
     "amount-error",
     "type-error",
     "date-error",
-    "transaction-type-filter",
-    "filter-all",
-    "filter-income",
-    "filter-expense",
+    "transaction-filter",
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, new FakeElement()]));
   Object.entries(elements).forEach(([id, element]) => {
@@ -141,9 +148,14 @@ const createApp = (storage = createStorage()) => {
   });
   elements["transaction-form"].elementsById = elements;
   elements["transaction-type"].value = "Expense";
-  elements["filter-all"].dataset.type = "all";
-  elements["filter-income"].dataset.type = "income";
-  elements["filter-expense"].dataset.type = "expense";
+
+  const filterAll = new FakeElement("button");
+  filterAll.dataset.filter = "all";
+  const filterIncome = new FakeElement("button");
+  filterIncome.dataset.filter = "income";
+  const filterExpense = new FakeElement("button");
+  filterExpense.dataset.filter = "expense";
+  elements["transaction-filter"].append(filterAll, filterIncome, filterExpense);
 
   let nextId = 1;
   const window = {
@@ -175,7 +187,7 @@ const createApp = (storage = createStorage()) => {
     { filename: "script.js" },
   );
 
-  return { context, elements, storage };
+  return { context, elements, storage, filterButtons: { filterAll, filterIncome, filterExpense } };
 };
 
 const transactionsFrom = (storage) =>
@@ -199,13 +211,14 @@ test("integration: index.html exposes every required app control and local asset
     "amount-error",
     "type-error",
     "date-error",
-    "transaction-type-filter",
-    "filter-all",
-    "filter-income",
-    "filter-expense",
+    "transaction-filter",
   ]) {
     assert.match(htmlSource, new RegExp(`\\bid="${id}"`), `missing #${id}`);
   }
+
+  assert.match(htmlSource, /data-filter="all"/);
+  assert.match(htmlSource, /data-filter="income"/);
+  assert.match(htmlSource, /data-filter="expense"/);
 
   assert.match(htmlSource, /<form\b[^>]*id="transaction-form"/);
   assert.match(htmlSource, /<button\b[^>]*id="save-transaction"[^>]*type="submit"/);
@@ -354,10 +367,13 @@ test("unit: legacy migration maps whole and fractional rupees without rounding",
     ],
   );
   assert.equal(storage.values.get("budget"), "9999");
-  assert.equal(storage.values.get("expenses"), JSON.stringify([
-    { title: "Whole", amount: 12 },
-    { title: "Paise", amount: 12.34 },
-  ]));
+  assert.equal(
+    storage.values.get("expenses"),
+    JSON.stringify([
+      { title: "Whole", amount: 12 },
+      { title: "Paise", amount: 12.34 },
+    ])
+  );
   assert.equal(context.__appTest.transactionRepository.load().length, 2);
 });
 
@@ -404,7 +420,7 @@ test("integration: empty app loads; saving transaction persists, renders, and up
 
 test("integration: selecting type filters updates visible history and empty state", () => {
   const storage = createStorage();
-  const { elements } = createApp(storage);
+  const { elements, filterButtons } = createApp(storage);
 
   elements["transaction-amount"].value = "10";
   elements["transaction-date"].value = "2026-10-14";
@@ -416,16 +432,17 @@ test("integration: selecting type filters updates visible history and empty stat
   elements["transaction-type"].value = "Expense";
   elements["transaction-form"].dispatch("submit");
 
-  elements["filter-income"].dispatch("click");
-  assert.equal(collectText(elements["transaction-history"]).includes("Money Received"), true);
+  filterButtons.filterIncome.dispatch("click");
+  assert.equal(
+    collectText(elements["transaction-history"]).includes("Money Received"),
+    true
+  );
   assert.equal(collectText(elements["transaction-history"]).includes("Expense"), false);
 
-  elements["filter-expense"].dispatch("click");
+  filterButtons.filterExpense.dispatch("click");
   assert.equal(collectText(elements["transaction-history"]).includes("Expense"), true);
 
   // Empty state for income when no income exists
-  elements["filter-all"].dispatch("click");
-  // Remove income by resetting storage to only expense
   const onlyExpenseStorage = createStorage({
     transactions: JSON.stringify({
       schemaVersion: 1,
@@ -440,9 +457,12 @@ test("integration: selecting type filters updates visible history and empty stat
     }),
   });
   const app2 = createApp(onlyExpenseStorage);
-  app2.elements["filter-income"].dispatch("click");
+  app2.filterButtons.filterIncome.dispatch("click");
   assert.equal(app2.elements["empty-state"].hidden, false);
-  assert.equal(app2.elements["empty-state"].textContent, "No income transactions found.");
+  assert.equal(
+    app2.elements["empty-state"].textContent,
+    "No income transactions found."
+  );
 });
 
 test("integration: invalid submission shows field feedback and does not persist", () => {
@@ -506,7 +526,7 @@ test("integration: failed save preserves form, state, and no-success feedback", 
   const initialEnvelope = JSON.stringify({ schemaVersion: 1, transactions: [] });
   const storage = createStorage(
     { transactions: initialEnvelope },
-    { failWrites: true },
+    { failWrites: true }
   );
   const { elements } = createApp(storage);
   elements["transaction-amount"].value = "5.25";
